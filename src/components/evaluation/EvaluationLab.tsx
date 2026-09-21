@@ -68,7 +68,7 @@ export function EvaluationLab() {
 
   return (
     <main className="screen-page evaluation-lab">
-      <header className="screen-topline"><Link className="back-link" href="/compare">← 후보 권역 비교</Link><span className="status-chip status-chip-demo">예시 데이터 · 정책 판단 금지</span></header>
+      <header className="screen-topline"><Link className="back-link" href="/compare">← 후보 권역 비교</Link><span className="status-chip status-chip-demo">시연 데이터 · 실제 지역평가 아님</span></header>
       <h1>평가방법 실험실</h1>
       <p>문헌을 참고한 정규화·AHP·가중합이 입력과 결측에 따라 어떻게 달라지는지 확인합니다. 화면의 입력은 가상 실험이며 저장되지 않습니다. 실제 지역의 성장 가능성이나 투자효과를 예측하지 않습니다.</p>
 

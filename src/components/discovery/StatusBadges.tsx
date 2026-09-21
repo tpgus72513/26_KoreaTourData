@@ -20,7 +20,7 @@ export function ScorePair({ potential, example }: { potential: number | null; ex
     <dl className="score-pair">
       <div>
         <dt>관광권역 여건 점수</dt>
-        <dd>{scoreText(potential)}{example && potential !== null ? ' · 예시' : ''}</dd>
+        <dd>{scoreText(potential)}{example && potential !== null ? ' · 시연' : ''}</dd>
       </div>
       <div>
         <dt>모형 검증</dt>

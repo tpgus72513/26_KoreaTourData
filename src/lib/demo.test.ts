@@ -5,7 +5,7 @@ import { demoSnapshot } from './demo';
 describe('demoSnapshot', () => {
   test('labels every illustrative score as a non-policy demo value', () => {
     expect(demoSnapshot.mode).toBe('demo');
-    expect(demoSnapshot.disclaimer).toContain('예시 데이터 · 정책 판단 금지');
+    expect(demoSnapshot.disclaimer).toContain('시연 데이터 · 실제 지역평가 아님');
 
     for (const region of demoSnapshot.regions) {
       expect(region.evidenceStatus).toBe('example');

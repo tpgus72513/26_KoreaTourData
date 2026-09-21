@@ -21,7 +21,7 @@ export function ComparisonView({ snapshot }: { snapshot: PublishedSnapshot }) {
       </header>
       <section className="comparison-intro">
         <div><p className="eyebrow">후보 권역 비교</p><h1>같은 기준에서, 먼저 검토할 권역을 고릅니다</h1><p>관광권역 여건과 자료의 확인 상태를 구분합니다. 여건 점수는 성장확률이나 투자효과가 아니며, 평가모형은 검증 전입니다.</p></div>
-        {priority ? <aside className="conclusion-card"><span>{snapshot.mode === 'demo' ? '예시 우선 검토 권역' : '현재 우선 검토 권역'}</span><strong>{getRegionName(priority.id)}</strong><p>{priority.reasons[0]}</p><DataStatusBadge status={priority.evidenceStatus} /></aside> : <aside className="conclusion-card"><strong>우선순위 산출 대기</strong><p>권역별 근거와 검토 의견이 등록되기 전에는 우선 권역을 정하지 않습니다.</p></aside>}
+        {priority ? <aside className="conclusion-card"><span>{snapshot.mode === 'demo' ? '시연 기준 우선 검토 권역' : '현재 우선 검토 권역'}</span><strong>{getRegionName(priority.id)}</strong><p>{priority.reasons[0]}</p><DataStatusBadge status={priority.evidenceStatus} /></aside> : <aside className="conclusion-card"><strong>우선순위 산출 대기</strong><p>권역별 근거와 검토 의견이 등록되기 전에는 우선 권역을 정하지 않습니다.</p></aside>}
       </section>
 
       <section className="comparison-grid" aria-label="관광권역 비교">
@@ -46,7 +46,7 @@ export function ComparisonView({ snapshot }: { snapshot: PublishedSnapshot }) {
           return <td key={region.id}>{result ? formatEvaluationNumber(result.score, '점') : '지표 근거 미등록'}</td>;
         })}</tr>) : METRICS.map(([metric, weight]) => <tr key={metric}><th scope="row">{metric}</th><td>{weight}</td>{snapshot.regions.map((region) => <td key={region.id}>지표 근거 미등록</td>)}</tr>)}</tbody></table></div>
         <p className="table-note">독립된 지표값·출처·기준 기간·공간 범위가 등록되기 전에는 지표 점수와 총점 기여분을 산출하지 않습니다. 관광자원 수만으로 실제 체류·소비나 이용 가능성을 판단하지 않습니다.</p>
-        {comparisonModel && <p className="table-note">현재 표는 독립된 합성 지표값을 계산한 예시입니다. 가중치와 정규화 기준은 실증 검증 전이며, 결측으로 총점이 없는 권역까지 포함한 순위를 만들지 않습니다.</p>}
+        {comparisonModel && <p className="table-note">현재 표는 합성 지표값으로 계산한 시연 결과입니다. 가중치와 정규화 기준은 실증 검증 전이며, 결측으로 총점이 없는 권역까지 포함한 순위를 만들지 않습니다.</p>}
         <Link className="secondary-link" href="/evaluation">평가방법 실험실 열기</Link>
       </section>
 

@@ -244,7 +244,7 @@ export function ReportPreview({ report }: { report: ReportModel }) {
         <h1 id="report-heading">안동 관광권역 정책 검토안</h1>
         <p>스냅샷 발행일: {report.analyzedAt}</p>
         <p>방문자 자료 기간: {report.visitorPeriod ?? '자료 없음'}</p>
-        {report.mode === 'demo' ? <p className="workflow-notice">예시 데이터 · 정책 판단 금지</p> : null}
+        {report.mode === 'demo' ? <p className="workflow-notice">시연 데이터 · 실제 지역평가 아님</p> : null}
         {report.snapshotStatus && report.snapshotStatus.type !== 'ready' ? (
           <div className="workflow-notice" role="status">
             <p>{report.snapshotStatus.message}</p>

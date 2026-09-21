@@ -67,7 +67,7 @@ export function DiscoveryShell({ snapshot }: { snapshot: PublishedSnapshot }) {
               </select>
             </label>
             <span>{filteredPlaces.length}개 자원 표시</span>
-            <span>자료 모드: {snapshot.mode === 'demo' ? '예시' : '라이브'}</span>
+            <span>자료 모드: {snapshot.mode === 'demo' ? '시연' : '라이브'}</span>
           </div>
           <MapCanvas snapshot={snapshot} places={filteredPlaces} selectedRegionId={selectedRegionId} onSelectRegion={setSelectedRegionId} />
         </section>
@@ -86,7 +86,7 @@ export function DiscoveryShell({ snapshot }: { snapshot: PublishedSnapshot }) {
         <section className="quick-compare" aria-labelledby="quick-compare-title">
           <div><p className="eyebrow">동일 기준 빠른 비교</p><h2 id="quick-compare-title">세 권역의 검토 상태</h2></div>
           <div className="quick-compare-grid">
-            {snapshot.regions.map((region) => <button key={region.id} type="button" onClick={() => setSelectedRegionId(region.id)}><strong>{getRegionName(region.id)}</strong><span>관광권역 여건 점수 {scoreText(region.potentialScore)}{snapshot.mode === 'demo' && region.potentialScore !== null ? ' · 예시' : ''}</span><span>모형 검증 전</span></button>)}
+            {snapshot.regions.map((region) => <button key={region.id} type="button" onClick={() => setSelectedRegionId(region.id)}><strong>{getRegionName(region.id)}</strong><span>관광권역 여건 점수 {scoreText(region.potentialScore)}{snapshot.mode === 'demo' && region.potentialScore !== null ? ' · 시연' : ''}</span><span>모형 검증 전</span></button>)}
           </div>
         </section>
       </main>

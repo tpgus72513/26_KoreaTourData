@@ -16,7 +16,7 @@ describe('discovery screens', () => {
 
     expect(screen.getByText('안동 관광권역 탐색')).not.toBeNull();
     expect(screen.getByRole('button', { name: /원도심·월영교권 선택/ })).not.toBeNull();
-    expect(screen.getByText('예시 데이터 · 정책 판단 금지')).not.toBeNull();
+    expect(screen.getByText('시연 데이터 · 실제 지역평가 아님')).not.toBeNull();
   });
 
   test('compares all three canonical regions', () => {
@@ -144,7 +144,7 @@ describe('discovery screens', () => {
     render(<EvidenceDetail snapshot={demoSnapshot} regionId="old-town-wolyeonggyo" />);
 
     expect(screen.getByText('관광권역 여건 점수')).not.toBeNull();
-    expect(screen.getByText('65점 · 예시')).not.toBeNull();
+    expect(screen.getByText('65점 · 시연')).not.toBeNull();
     expect(screen.queryByText('48점')).toBeNull();
     expect(screen.getByText('모형 검증')).not.toBeNull();
     expect(screen.getByText('검증 전')).not.toBeNull();

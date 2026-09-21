@@ -1,7 +1,7 @@
 import type { PublishedSnapshot, ValidationTask } from './domain';
 import { createDemoEvaluation } from './evaluation/catalog';
 
-const DEMO_DISCLAIMER = '예시 데이터 · 정책 판단 금지';
+const DEMO_DISCLAIMER = '시연 데이터 · 실제 지역평가 아님';
 
 const baseDemoSnapshot: PublishedSnapshot = {
   mode: 'demo',
@@ -9,7 +9,7 @@ const baseDemoSnapshot: PublishedSnapshot = {
   disclaimer: DEMO_DISCLAIMER,
   visitorContext: {
     scope: '안동시',
-    source: '예시 데이터',
+    source: '시연 데이터',
     period: { start: '2026-09-01', end: '2026-09-07' },
     visitorCount: null,
     evidenceStatus: 'example',
@@ -71,7 +71,7 @@ const baseDemoSnapshot: PublishedSnapshot = {
       longitude: 128.7364,
       regionId: 'old-town-wolyeonggyo',
       evidenceStatus: 'example',
-      source: '예시 데이터',
+      source: '시연 데이터',
       address: '경상북도 안동시 상아동',
     },
     {
@@ -82,7 +82,7 @@ const baseDemoSnapshot: PublishedSnapshot = {
       longitude: 128.5185,
       regionId: 'hahoemaeul',
       evidenceStatus: 'example',
-      source: '예시 데이터',
+      source: '시연 데이터',
       address: '경상북도 안동시 풍천면 하회종가길',
     },
     {
@@ -93,19 +93,19 @@ const baseDemoSnapshot: PublishedSnapshot = {
       longitude: 128.8432,
       regionId: 'dosan-yekki',
       evidenceStatus: 'example',
-      source: '예시 데이터',
+      source: '시연 데이터',
       address: '경상북도 안동시 도산면 선성길',
     },
   ],
   limitations: [
-    '모든 점수와 판단은 시연용 예시 데이터이며 정책 판단에 사용할 수 없습니다.',
+    '현재 점수와 검토 의견은 시연 자료로 계산·작성했습니다. 실제 지역평가에는 실측자료와 검증이 필요합니다.',
     '관광권역 여건 점수는 성장확률이나 투자효과가 아닙니다. 지표·가중치와 평가모형은 검증 전입니다.',
     '시·군 단위 방문자 수는 관광권역별 실측값으로 배분하지 않습니다.',
     '관광약자 접근성, 운영시간, 이동 연결성은 현장 확인 전입니다.',
   ],
   status: {
     type: 'ready',
-    message: '예시 데이터 시연 모드입니다.',
+    message: '시연 데이터 모드입니다.',
     lastAttemptAt: null,
     affectedData: [],
   },

@@ -88,7 +88,7 @@ export function EvidenceDetail({ snapshot, regionId }: { snapshot: PublishedSnap
             <article>
               <DataStatusBadge status={region.evidenceStatus} /><h3>권역 검토 지표</h3>
               <dl>
-                <div><dt>값과 단위</dt><dd>{evaluation?.result.totalScore != null ? `${evaluation.result.totalScore}점 · 합성 자료로 계산한 예시` : '지표 근거 미등록 또는 결측 · 산출 대기'}</dd></div>
+                <div><dt>값과 단위</dt><dd>{evaluation?.result.totalScore != null ? `${evaluation.result.totalScore}점 · 합성 자료로 계산한 시연 결과` : '지표 근거 미등록 또는 결측 · 산출 대기'}</dd></div>
                 <div><dt>기준 기간</dt><dd>{evaluation ? `${evaluation.input.period.start} ~ ${evaluation.input.period.end} · 가상 조사기간` : '권역 지표 기준 기간 미등록'}</dd></div>
                 <div><dt>공간 범위</dt><dd>{getRegionName(region.id)} 중심점·반경 기반 탐색</dd></div>
                 <div><dt>출처 API</dt><dd>{evaluation ? '합성 자료 · 실제 API 응답 아님 · 위 계산 추적표 참조' : '권역 지표 원자료 미등록'}</dd></div>

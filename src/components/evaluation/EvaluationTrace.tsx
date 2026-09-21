@@ -21,7 +21,7 @@ export function EvaluationTrace({ bundle }: { bundle: EvaluationBundle }) {
     <section className="evaluation-trace" aria-labelledby={titleId}>
       <p className="eyebrow">문헌을 참고한 계산 절차</p>
       <h2 id={titleId}>원자료에서 총점까지 계산 근거를 확인합니다</h2>
-      <p className="evaluation-notice">{model.status === 'illustrative' ? '합성 자료로 계산한 시연 결과 · 정책 판단 금지' : '예비 평가모형 · 지역별 실증 검증 전'}. 논문은 지표 개발·AHP·종합지수의 방법론 근거입니다. 아래 지표, 기준값, 가중치와 필수조건을 논문이 검증한 것은 아닙니다.</p>
+      <p className="evaluation-notice">관광평가 관련 문헌을 참고해 지표 구성과 AHP 기반 가중치 산정, 종합점수 계산 기능을 구현했습니다. {model.status === 'illustrative' ? '현재 점수는 시연 자료로 계산했습니다.' : '현재 평가모형은 지역별 실증 검증 전입니다.'}</p>
 
       <section aria-label="평가 계산 결과">
         <dl className="evaluation-summary">

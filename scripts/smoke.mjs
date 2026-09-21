@@ -3,7 +3,7 @@
 const rawBaseUrl = process.env.BASE_URL ?? 'http://localhost:3000';
 
 const pageContracts = [
-  { path: '/', text: '예시 데이터 · 정책 판단 금지' },
+  { path: '/', text: '시연 데이터 · 실제 지역평가 아님' },
   { path: '/compare', text: '후보 권역 비교' },
   { path: '/regions/old-town-wolyeonggyo', text: '원도심·월영교권' },
   { path: '/actions', text: '우선 실행과제' },
@@ -74,7 +74,7 @@ async function main() {
   }
 
   const home = renderedPages[0];
-  expect(home.includes('예시 데이터 · 정책 판단 금지'), '/: expected demo provenance label.');
+  expect(home.includes('시연 데이터 · 실제 지역평가 아님'), '/: expected demo provenance label.');
   console.log('PASS / demo provenance');
   expect(home.includes('지도 대체 목록'), '/: expected accessible map fallback content.');
   console.log('PASS / map fallback');

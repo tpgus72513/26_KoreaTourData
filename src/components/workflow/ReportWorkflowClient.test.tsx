@@ -56,7 +56,7 @@ describe('ReportWorkflowClient', () => {
     );
 
     expect(await screen.findByText('세션에서 복원된 실행과제')).toBeTruthy();
-    expect(screen.getByText('예시 데이터 · 정책 판단 금지')).toBeTruthy();
+    expect(screen.getByText('시연 데이터 · 실제 지역평가 아님')).toBeTruthy();
     expect(screen.getByText('관광권역 여건 점수')).toBeTruthy();
     expect(screen.getByText('68점')).toBeTruthy();
     expect(screen.getByText('자료 검증 기준 수립 전')).toBeTruthy();

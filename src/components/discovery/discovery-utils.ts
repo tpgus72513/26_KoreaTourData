@@ -13,7 +13,7 @@ export const evidenceStatusLabel: Record<EvidenceStatus, string> = {
   inferred: '추론',
   'field-required': '현장확인 필요',
   unknown: '정보 없음',
-  example: '예시',
+  example: '시연',
 };
 
 export function getRegionName(id: RegionId) {
