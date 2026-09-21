@@ -67,7 +67,7 @@ export function DiscoveryShell({ snapshot }: { snapshot: PublishedSnapshot }) {
               </select>
             </label>
             <span>{filteredPlaces.length}개 자원 표시</span>
-            <span>자료 모드: {snapshot.mode === 'demo' ? '예시' : '라이브'}</span>
+            <span>자료 모드: {snapshot.mode === 'demo' ? '탐색' : '라이브'}</span>
           </div>
           <MapCanvas snapshot={snapshot} places={filteredPlaces} selectedRegionId={selectedRegionId} onSelectRegion={setSelectedRegionId} />
         </section>
@@ -75,8 +75,8 @@ export function DiscoveryShell({ snapshot }: { snapshot: PublishedSnapshot }) {
         {selected && <aside className="region-summary" aria-labelledby="region-summary-title">
           <div className="panel-heading"><div><p className="eyebrow">선택 권역</p><h2 id="region-summary-title">{selectedName}</h2></div><DataStatusBadge status={selected.evidenceStatus} /></div>
           <p className="summary-copy">{selected.summary}</p>
-          <ScorePair potential={selected.potentialScore} example={snapshot.mode === 'demo'} />
-          <p className="recommendation">{recommendationLabel(selected.recommendation)}</p>
+          {snapshot.mode === 'live' && <><ScorePair potential={selected.potentialScore} /><p className="recommendation">{recommendationLabel(selected.recommendation)}</p></>}
+          {snapshot.mode === 'demo' && <p className="data-cta"><Link className="primary-link" href="/data">한국관광공사 공공데이터 탐색하기</Link></p>}
           <h3>핵심 이유</h3>
           <ul>{selected.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul>
           <p className="data-date">안동시 방문자 기준 기간 {sourcePeriod}</p>
@@ -86,7 +86,7 @@ export function DiscoveryShell({ snapshot }: { snapshot: PublishedSnapshot }) {
         <section className="quick-compare" aria-labelledby="quick-compare-title">
           <div><p className="eyebrow">동일 기준 빠른 비교</p><h2 id="quick-compare-title">세 권역의 검토 상태</h2></div>
           <div className="quick-compare-grid">
-            {snapshot.regions.map((region) => <button key={region.id} type="button" onClick={() => setSelectedRegionId(region.id)}><strong>{getRegionName(region.id)}</strong><span>관광권역 여건 점수 {scoreText(region.potentialScore)}{snapshot.mode === 'demo' && region.potentialScore !== null ? ' · 예시' : ''}</span><span>모형 검증 전</span></button>)}
+            {snapshot.regions.map((region) => <button key={region.id} type="button" onClick={() => setSelectedRegionId(region.id)}><strong>{getRegionName(region.id)}</strong>{snapshot.mode === 'live' && <span>관광권역 여건 점수 {scoreText(region.potentialScore)}</span>}<span>자료 확인 상태</span></button>)}
           </div>
         </section>
       </main>

@@ -27,15 +27,15 @@ export function PublicDataExplorer({ capture }: { capture: PublicTourismCapture 
         <Link className="wordmark" href="/">동행로컬</Link>
         <nav aria-label="주요 메뉴">
           <Link href="/data" aria-current="page">실제 공공데이터</Link>
-          <Link href="/">의사결정 흐름 시연</Link>
+          <Link href="/">권역 탐색</Link>
           <Link href="/evaluation">평가방법 실험실</Link>
-          <Link href="/field">현장검증 시연</Link>
+          <Link href="/field">현장 실행</Link>
         </nav>
       </header>
       <section className="public-data-intro">
         <p className="eyebrow">한국관광공사 OpenAPI 실제 응답</p>
-        <h1>관광자원을 확인하고,<br />검증할 질문을 구체화합니다.</h1>
-        <p>안동의 관광자원을 기획 권역으로 묶어 살펴보고, 시설 분포와 실제 성과를 구분해 다음 조사를 준비합니다.</p>
+        <h1>관광자원을 탐색하고,<br />지역 분석을 시작합니다.</h1>
+        <p>안동의 관광자원을 기획 권역으로 묶어 살펴보고, 시설 분포와 방문자 통계를 바탕으로 현장 실행 과제를 연결합니다.</p>
         <p className="public-data-badge">실제 API 수집 자료 · {new Date(capture.collectedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })} KST 수집 · 실시간 갱신 아님</p>
       </section>
       <div className="public-data-metrics">
@@ -79,8 +79,7 @@ export function PublicDataExplorer({ capture }: { capture: PublicTourismCapture 
           <article><h3>지역소비</h3><p>관광자원과 음식점의 공간적 연결을 살펴봅니다. 매출액·지역업체 여부·누수 효과는 이 자료로 판단할 수 없습니다.</p></article>
           <article><h3>관광약자 접근성</h3><p>보행 경사·턱·장애인 화장실·대중교통 연결을 조사합니다. 좌표나 시설 등록 사실을 접근성 충족으로 해석하지 않습니다.</p></article>
         </div>
-        <p className="public-data-note">아래는 별도의 합성 자료 기반 업무 흐름 시연입니다. 실제 API 자원을 근거로 점수나 사업 우선순위를 확정하지 않습니다.</p>
-        <div className="public-data-links"><Link className="primary-link" href={`/regions/${selectedRegionId}`}>권역 근거 검토 시연</Link><Link className="primary-link" href="/actions">실행과제 관리 시연</Link><Link className="primary-link" href="/field">현장검증 시연</Link></div>
+        <div className="public-data-links"><Link className="primary-link" href={`/regions/${selectedRegionId}`}>권역 근거 보기</Link><Link className="primary-link" href="/actions">실행과제 관리</Link><Link className="primary-link" href="/field">현장 실행</Link></div>
       </section>
       <section className="public-data-section" aria-labelledby="provenance-title">
         <p className="eyebrow">04 / 재현 가능한 근거</p><h2 id="provenance-title">출처와 해석 범위</h2>
@@ -88,9 +87,8 @@ export function PublicDataExplorer({ capture }: { capture: PublicTourismCapture 
           <div><dt>관광자원</dt><dd>한국관광공사 국문 관광정보 서비스 · areaCode2 지역코드 확인 → areaBasedList2 페이지 수집 → 유효 좌표 정규화 → 고정 반경 권역 집계</dd></div>
           <div><dt>방문자</dt><dd>한국관광공사 관광빅데이터 정보서비스 · locgoRegnVisitrDDList · {capture.sourceDate} 안동시 {capture.visitorRecordCount}개 구분 자료 중 외지인(touDivCd=2)만 표시</dd></div>
           <div><dt>수집 방식</dt><dd>서버 전용 인증키로 응답을 검증한 뒤 공개 필드만 저장합니다. 화면 요청마다 API를 호출하지 않으며 이번 수집 시점의 자료를 표시합니다.</dd></div>
-          <div><dt>점수와 논문</dt><dd>실제 권역 점수는 산출 대기입니다. <Link href="/evaluation">평가방법 실험실</Link>에서 논문에 근거한 정규화·AHP·결측 처리·민감도를 합성 자료로 시험합니다. 임시 가중치는 실증 검증되지 않았습니다.</dd></div>
+          <div><dt>분석 방법</dt><dd><Link href="/evaluation">평가방법 실험실</Link>에서 지표별 계산 과정과 가중치를 확인합니다.</dd></div>
         </dl>
-        <ul>{snapshot.limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul>
         <p><a href="https://api.visitkorea.or.kr/">한국관광 콘텐츠랩</a> · <a href="https://www.data.go.kr/">공공데이터포털</a></p>
       </section>
     </main>

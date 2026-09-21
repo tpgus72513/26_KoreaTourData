@@ -30,7 +30,7 @@ describe('real public resource explorer', () => {
     fireEvent.change(screen.getByLabelText('자원 유형'), { target: { value: 'all' } });
     expect(within(map).getByText('하회 관광지')).toBeTruthy();
     expect(screen.getAllByText('독립 관측값 필요')).toHaveLength(3);
-    expect(screen.getByRole('link', { name: '권역 근거 검토 시연' }).getAttribute('href')).toBe('/regions/hahoemaeul');
+    expect(screen.getByRole('link', { name: '권역 근거 보기' }).getAttribute('href')).toBe('/regions/hahoemaeul');
     expect(screen.getByText(/2026-08-20 · 시 전체 맥락/)).toBeTruthy();
   });
 });

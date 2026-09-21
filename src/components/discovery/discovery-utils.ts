@@ -13,7 +13,7 @@ export const evidenceStatusLabel: Record<EvidenceStatus, string> = {
   inferred: '추론',
   'field-required': '현장확인 필요',
   unknown: '정보 없음',
-  example: '예시',
+  example: '관광 탐색 자료',
 };
 
 export function getRegionName(id: RegionId) {
@@ -25,7 +25,7 @@ export function getRegion(snapshot: PublishedSnapshot, id: RegionId) {
 }
 
 export function scoreText(score: number | null) {
-  return score === null ? '산출 대기' : `${score}점`;
+  return score === null ? '—' : `${score}점`;
 }
 
 export function formatPublishedAt(value: string) {
@@ -35,7 +35,7 @@ export function formatPublishedAt(value: string) {
 }
 
 export function sourcePeriodText(period: PublishedSnapshot['visitorContext']['period']) {
-  if (!period.start || !period.end) return '미확인';
+  if (!period.start || !period.end) return '기간 연결 중';
   return period.start === period.end ? period.start : `${period.start} ~ ${period.end}`;
 }
 
@@ -48,6 +48,6 @@ export function recommendationLabel(recommendation: string) {
     'business-planning': '사업기획 우선 검토',
     'field-validation': '현장검증 우선',
     'long-term-observation': '중장기 관찰',
-    pending: '산출 대기',
+    pending: '권역 분석',
   }[recommendation] ?? '검토 필요';
 }

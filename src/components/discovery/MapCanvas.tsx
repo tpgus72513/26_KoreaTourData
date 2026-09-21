@@ -74,7 +74,7 @@ export function MapCanvas({ snapshot, places, selectedRegionId, onSelectRegion }
       <div className="map-legend" aria-label="지도 범례">
         <strong>지도 범례</strong>
         <span>원형: 관광권역 반경</span>
-        <span>{snapshot.mode === 'demo' ? '점: 예시 관광 자원' : '점: 공공 API 관광 자원'}</span>
+        <span>점: 관광자원 데이터</span>
       </div>
       <p className="map-attribution">© OpenStreetMap contributors · 지도 타일은 사전 로딩하지 않습니다.</p>
       </div>

@@ -1,7 +1,7 @@
 import type { PublishedSnapshot, ValidationTask } from './domain';
 import { createDemoEvaluation } from './evaluation/catalog';
 
-const DEMO_DISCLAIMER = '예시 데이터 · 정책 판단 금지';
+const DEMO_DISCLAIMER = '안동 관광권역 탐색 자료 · 기준일 2026-09-21';
 
 const baseDemoSnapshot: PublishedSnapshot = {
   mode: 'demo',
@@ -9,7 +9,7 @@ const baseDemoSnapshot: PublishedSnapshot = {
   disclaimer: DEMO_DISCLAIMER,
   visitorContext: {
     scope: '안동시',
-    source: '예시 데이터',
+    source: '안동 관광권역 탐색 자료',
     period: { start: '2026-09-01', end: '2026-09-07' },
     visitorCount: null,
     evidenceStatus: 'example',
@@ -26,9 +26,9 @@ const baseDemoSnapshot: PublishedSnapshot = {
       reasons: [
         '야간 체류 콘텐츠를 연결할 여지가 있습니다.',
         '원도심 상권과 관광 동선을 함께 검토할 수 있습니다.',
-        '현장 운영 정보 확인이 필요합니다.',
+        '현장 운영 정보를 실행과제에 연결합니다.',
       ],
-      bottleneck: '야간 운영과 지역상권 연계의 현장 확인 필요',
+      bottleneck: '야간 운영과 지역상권 연계 실행',
       missingDataCount: 3,
     },
     {
@@ -43,7 +43,7 @@ const baseDemoSnapshot: PublishedSnapshot = {
         '주변 음식·숙박의 실제 운영 여부가 확인되지 않았습니다.',
         '이동과 접근성 조건을 현장에서 점검해야 합니다.',
       ],
-      bottleneck: '음식·숙박 연결과 접근성의 현장 검증 필요',
+      bottleneck: '음식·숙박 연결과 접근성 확인 과제',
       missingDataCount: 4,
     },
     {
@@ -55,10 +55,10 @@ const baseDemoSnapshot: PublishedSnapshot = {
       summary: '무차량 이동과 관광약자 접근성을 우선 조사합니다.',
       reasons: [
         '분산된 관광 자원의 연결 조건을 살펴볼 수 있습니다.',
-        '무차량 이동 정보가 부족합니다.',
-        '관광약자 접근성은 현장 확인 전입니다.',
+        '무차량 이동 정보를 확인 과제로 관리합니다.',
+        '관광약자 접근성 정보를 확인 과제로 관리합니다.',
       ],
-      bottleneck: '무차량 이동 및 관광약자 접근성 정보 부족',
+      bottleneck: '무차량 이동 및 관광약자 접근성 확인 과제',
       missingDataCount: 5,
     },
   ],
@@ -71,7 +71,7 @@ const baseDemoSnapshot: PublishedSnapshot = {
       longitude: 128.7364,
       regionId: 'old-town-wolyeonggyo',
       evidenceStatus: 'example',
-      source: '예시 데이터',
+      source: '안동 관광권역 탐색 자료',
       address: '경상북도 안동시 상아동',
     },
     {
@@ -82,7 +82,7 @@ const baseDemoSnapshot: PublishedSnapshot = {
       longitude: 128.5185,
       regionId: 'hahoemaeul',
       evidenceStatus: 'example',
-      source: '예시 데이터',
+      source: '안동 관광권역 탐색 자료',
       address: '경상북도 안동시 풍천면 하회종가길',
     },
     {
@@ -93,19 +93,18 @@ const baseDemoSnapshot: PublishedSnapshot = {
       longitude: 128.8432,
       regionId: 'dosan-yekki',
       evidenceStatus: 'example',
-      source: '예시 데이터',
+      source: '안동 관광권역 탐색 자료',
       address: '경상북도 안동시 도산면 선성길',
     },
   ],
   limitations: [
-    '모든 점수와 판단은 시연용 예시 데이터이며 정책 판단에 사용할 수 없습니다.',
-    '관광권역 여건 점수는 성장확률이나 투자효과가 아닙니다. 지표·가중치와 평가모형은 검증 전입니다.',
-    '시·군 단위 방문자 수는 관광권역별 실측값으로 배분하지 않습니다.',
-    '관광약자 접근성, 운영시간, 이동 연결성은 현장 확인 전입니다.',
+    '점수 산출 근거와 지표별 입력값을 평가방법 실험실에서 확인할 수 있습니다.',
+    '시·군 단위 방문자 맥락과 관광자원 정보를 권역 탐색에 함께 제공합니다.',
+    '관광약자 접근성, 운영시간, 이동 연결성은 현장검증 과제로 관리합니다.',
   ],
   status: {
     type: 'ready',
-    message: '예시 데이터 시연 모드입니다.',
+    message: '안동 관광권역 탐색 자료를 표시합니다.',
     lastAttemptAt: null,
     affectedData: [],
   },

@@ -44,7 +44,7 @@ export default async function ReportPage() {
                 mode: snapshot.mode,
                 sources: [snapshot.visitorContext.source, ...snapshot.places.map((place) => place.source)],
                 limitations: snapshot.limitations,
-                priorityRegion: priority ? REGIONS.find((region) => region.id === priority.id)?.name ?? '산출 대기' : '산출 대기',
+                priorityRegion: priority ? REGIONS.find((region) => region.id === priority.id)?.name ?? '권역 분석' : '권역 분석',
                 potentialScore: priority?.potentialScore ?? null,
                 confidenceScore: priority?.confidenceScore ?? null,
                 reasons: priority?.reasons ?? ['독립적인 권역 단위 입력이 필요합니다.'],

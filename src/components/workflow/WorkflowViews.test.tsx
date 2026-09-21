@@ -24,10 +24,11 @@ const task: ValidationTask = {
 };
 
 describe('workflow views', () => {
-  it('includes the shared calculation and missing-data bounds in the printable report', () => {
+  it('includes the shared calculation and missing-data bounds in the live report', () => {
     const { container } = render(<ReportPreview report={{
-      analyzedAt: '2026-09-21', mode: 'demo', sources: [], limitations: [],
-      priorityRegion: '산출 대기', potentialScore: null, confidenceScore: null, reasons: [], tasks: [],
+      analyzedAt: '2026-09-21', mode: 'live', sources: [], limitations: [],
+          priorityRegion: '하회마을권', potentialScore: 68, confidenceScore: 42, reasons: [], tasks: [],
+      snapshotStatus: { type: 'ready', message: '자료 동기화 완료', affectedData: [], lastAttemptAt: null },
       evaluations: [createDemoEvaluation('old-town-wolyeonggyo'), createDemoEvaluation('hahoemaeul')],
     }} />);
     const report = within(container);
@@ -45,10 +46,10 @@ describe('workflow views', () => {
     );
   });
 
-  it('labels demo saves as browser-session-only', () => {
+  it('keeps the field workflow focused on saved validation work', () => {
     render(<FieldValidationBoard tasks={[task]} mode="demo" onSave={vi.fn()} />);
 
-    expect(screen.getByText('시연 모드: 이 변경은 이 브라우저 세션에서만 유지됩니다.')).toBeTruthy();
+    expect(screen.queryByText(/시연 모드/)).toBeNull();
     expect(screen.getByLabelText('담당자')).toBeTruthy();
     expect(screen.getByLabelText('예정일')).toBeTruthy();
     expect(screen.getByLabelText('검증 결과')).toBeTruthy();
@@ -88,7 +89,11 @@ describe('workflow views', () => {
 
     expect(screen.getByText('스냅샷 발행일: 2026-09-21')).toBeTruthy();
     expect(screen.getByText('한국관광공사 관광정보 API')).toBeTruthy();
-    expect(screen.getByText('권역별 실측 방문 데이터가 없습니다.')).toBeTruthy();
+    expect(screen.getByText('포함된 데이터 출처')).toBeTruthy();
+    expect(screen.queryByText('데이터 한계')).toBeNull();
+    expect(screen.queryByText('관광권역 여건 점수')).toBeNull();
+    expect(screen.queryByText('최신 자료 반영')).toBeNull();
+    expect(screen.getByText('현장검증 및 실행')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'PDF 미리보기' })).toBeTruthy();
   });
 });

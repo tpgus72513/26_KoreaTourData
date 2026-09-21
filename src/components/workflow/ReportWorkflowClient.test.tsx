@@ -56,10 +56,11 @@ describe('ReportWorkflowClient', () => {
     );
 
     expect(await screen.findByText('세션에서 복원된 실행과제')).toBeTruthy();
-    expect(screen.getByText('예시 데이터 · 정책 판단 금지')).toBeTruthy();
-    expect(screen.getByText('관광권역 여건 점수')).toBeTruthy();
-    expect(screen.getByText('68점')).toBeTruthy();
-    expect(screen.getByText('자료 검증 기준 수립 전')).toBeTruthy();
+    expect(screen.queryByText('예시 데이터 · 정책 판단 금지')).toBeNull();
+    expect(screen.queryByText('관광권역 여건 점수')).toBeNull();
+    expect(screen.queryByText('68점')).toBeNull();
+    expect(screen.queryByText('자료 상태')).toBeNull();
+    expect(screen.queryByText('최신 자료 반영')).toBeNull();
     expect(screen.queryByText('42점')).toBeNull();
     expect(screen.getByText('확인 중 1건')).toBeTruthy();
     expect(screen.getByText('KPI 초안: 현장검증 과제 완료 0/1건')).toBeTruthy();

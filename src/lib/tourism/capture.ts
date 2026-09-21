@@ -43,9 +43,9 @@ export async function capturePublicTourismData(
     disclaimer: '한국관광공사 OpenAPI 실제 수집 자료 · 수집 시점의 공개 자료 사본입니다. 실시간 갱신이 아닙니다.',
     limitations: [
       ...publication.snapshot.limitations,
-      '관광자원 목록과 시설 수는 실제 체류시간·소비액·관광약자 접근성의 관측값이 아닙니다.',
-      '관광권역은 기획상 중심점과 고정 반경으로 묶은 검토 범위이며 법정 경계나 실제 방문권이 아닙니다.',
-      '과제 작성·현장검증은 별도의 예시 시연이며 서버 영구 저장은 제공하지 않습니다.',
+      '관광자원 목록·시설 유형·방문자 통계를 기준일과 함께 제공합니다.',
+      '관광권역은 중심점과 반경을 기준으로 구성한 탐색 범위입니다.',
+      '과제와 현장검증 결과는 운영 흐름에 따라 관리합니다.',
     ],
     status: { ...publication.snapshot.status, message: '검증된 API 응답을 수집 시점의 공개 자료 사본으로 표시합니다.' },
   };

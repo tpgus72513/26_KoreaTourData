@@ -7,7 +7,7 @@ import { analyzeSensitivity } from '../../lib/evaluation/sensitivity';
 import { formatEvaluationNumber } from './EvaluationTrace';
 
 function scoreRange(lower: number | null, upper: number | null) {
-  return lower === null || upper === null ? '산출 보류' : `${lower.toFixed(1)} ~ ${upper.toFixed(1)}점`;
+  return lower === null || upper === null ? '계산 조건 확인 필요' : `${lower.toFixed(1)} ~ ${upper.toFixed(1)}점`;
 }
 
 export function SensitivityPanel({ bundle }: { bundle: EvaluationBundle }) {
@@ -19,21 +19,21 @@ export function SensitivityPanel({ bundle }: { bundle: EvaluationBundle }) {
     const inputs = REGIONS.map((region) => region.id === bundle.input.regionId ? bundle.input : createDemoEvaluation(region.id).input);
     analysis = analyzeSensitivity(bundle.model, inputs);
   } catch (error) {
-    return <section className="evaluation-trace" aria-label="가중치 민감도"><h2>가중치 민감도</h2><p role="alert">민감도 계산을 보류합니다: {error instanceof Error ? error.message : '비교 조건을 확인해 주세요.'}</p></section>;
+    return <section className="evaluation-trace" aria-label="가중치 민감도"><h2>가중치 민감도</h2><p role="alert">민감도 계산 조건을 확인해 주세요: {error instanceof Error ? error.message : '비교 조건을 확인해 주세요.'}</p></section>;
   }
 
   return (
     <section className="evaluation-trace" aria-label="가중치 민감도">
       <p className="eyebrow">가중치 변경에 따른 결과 확인</p>
       <h2>가중치 민감도</h2>
-      <p>현재 입력을 유지하고 영역 가중치만 바꿉니다. 현재 가중치, 동등 가중치, 영역별 상대 ±20% 변경 후 합계 1 재정규화의 {analysis.scenarios.length}개 시나리오를 계산합니다. ±20%는 서비스가 정한 시험 조건이며 논문에서 검증된 보편적 기준이 아닙니다. 현재 가중치가 동등하면 두 기준 시나리오는 같습니다.</p>
-      <p className="evaluation-notice">아래 범위는 시험한 가중치 시나리오의 최솟값·최댓값이며 신뢰구간이나 성공확률이 아닙니다. 결측에 따른 계산상 범위와도 구분합니다. 가중치에 따른 점수 변동이 작아도 모형의 타당성을 보장하지 않습니다.</p>
-      <p>선택 권역은 현재 수정한 입력을, 다른 권역은 고정된 합성 자료를 사용합니다. 결측 또는 미확인·미충족 필수조건이 있는 권역이 하나라도 있으면 전체 비교 순위를 보류합니다. 여건 점수의 순위가 사업 우선순위를 뜻하지 않습니다.</p>
+      <p>현재 입력을 유지하고 영역 가중치만 바꿉니다. 현재 가중치, 동등 가중치, 영역별 상대 ±20% 변경 후 합계 1 재정규화의 {analysis.scenarios.length}개 시나리오를 계산합니다. ±20%는 서비스가 제공하는 비교 조건입니다. 현재 가중치가 동등하면 두 기준 시나리오는 같습니다.</p>
+      <p className="evaluation-notice">아래 범위는 선택한 가중치 시나리오의 최솟값·최댓값입니다. 결측에 따른 계산상 범위와 함께 확인해 가중치 변화에 따른 점수 흐름을 비교할 수 있습니다.</p>
+      <p>선택 권역은 현재 수정한 입력을 기준으로 계산하며, 다른 권역은 저장된 입력을 사용합니다. 결측 또는 필수조건 상태는 비교 결과와 함께 표시됩니다.</p>
       <div className="evaluation-trace-scroll" tabIndex={0} aria-label="민감도 요약표 가로 스크롤">
         <table>
           <caption>권역별 가중치 시나리오 범위</caption>
           <thead><tr><th scope="col">권역</th><th scope="col">여건 점수 범위</th><th scope="col">여건 점수 순위 범위</th></tr></thead>
-          <tbody>{analysis.summaries.map((summary) => <tr key={summary.regionId}><th scope="row">{REGIONS.find((region) => region.id === summary.regionId)?.name ?? summary.regionId}{summary.regionId === bundle.input.regionId && <small>현재 편집 중인 권역</small>}</th><td>{scoreRange(summary.minScore, summary.maxScore)}</td><td>{summary.minRank === null || summary.maxRank === null ? '산출 보류' : `${summary.minRank} ~ ${summary.maxRank}위`}</td></tr>)}</tbody>
+      <tbody>{analysis.summaries.map((summary) => <tr key={summary.regionId}><th scope="row">{REGIONS.find((region) => region.id === summary.regionId)?.name ?? summary.regionId}{summary.regionId === bundle.input.regionId && <small>현재 편집 중인 권역</small>}</th><td>{scoreRange(summary.minScore, summary.maxScore)}</td><td>{summary.minRank === null || summary.maxRank === null ? '계산 조건 확인 필요' : `${summary.minRank} ~ ${summary.maxRank}위`}</td></tr>)}</tbody>
         </table>
       </div>
       <details>

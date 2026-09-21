@@ -14,9 +14,9 @@ describe('weight sensitivity panel', () => {
     const table = screen.getByRole('table', { name: '권역별 가중치 시나리오 범위' });
     expect(within(table).getAllByRole('row')).toHaveLength(4);
     const missingRegion = within(table).getByRole('row', { name: /하회마을권/ });
-    expect(within(missingRegion).getAllByText('산출 보류')).toHaveLength(2);
-    expect(within(table).getAllByText('산출 보류')).toHaveLength(4);
-    expect(screen.getByText(/신뢰구간이나 성공확률이 아닙니다/)).not.toBeNull();
+    expect(within(missingRegion).getAllByText('계산 조건 확인 필요')).toHaveLength(2);
+    expect(within(table).getAllByText('계산 조건 확인 필요')).toHaveLength(4);
+    expect(screen.getByText(/점수 흐름을 비교할 수 있습니다/)).not.toBeNull();
   });
 
   test('evaluates twelve scenarios from the current edited observations instead of a cached result', () => {

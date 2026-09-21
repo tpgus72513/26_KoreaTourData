@@ -55,7 +55,7 @@ function liveEmptySnapshot(message: string, status: 'empty' | 'error' = 'empty')
   return {
     mode: 'live',
     publishedAt: new Date(0).toISOString(),
-    disclaimer: '라이브 데이터는 마지막 정상 발행본만 표시하며 시연값으로 대체하지 않습니다.',
+    disclaimer: '한국관광공사 공개 자료 · 발행 상태를 함께 표시합니다.',
     visitorContext: {
       scope: '안동시',
       source: '한국관광공사 관광데이터 API',
@@ -70,7 +70,7 @@ function liveEmptySnapshot(message: string, status: 'empty' | 'error' = 'empty')
       confidenceScore: null,
       evidenceStatus: 'unknown',
       recommendation: 'pending',
-      summary: '산출 대기',
+      summary: '권역 분석',
       reasons: [],
       bottleneck: '독립적인 권역 단위 입력이 필요합니다.',
       missingDataCount: null,
@@ -78,7 +78,7 @@ function liveEmptySnapshot(message: string, status: 'empty' | 'error' = 'empty')
     places: [],
     limitations: [
       '발행된 라이브 스냅샷이 없거나 읽을 수 없습니다.',
-      '시연값으로 자동 전환하지 않습니다.',
+      '새 발행본이 준비되면 최신 자료로 갱신됩니다.',
     ],
     status: {
       type: status,

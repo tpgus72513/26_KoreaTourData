@@ -11,12 +11,12 @@ import { EvidenceDetail } from './EvidenceDetail';
 afterEach(cleanup);
 
 describe('discovery screens', () => {
-  test('renders a named map region and the required demo policy disclaimer', () => {
+  test('renders a named map region and the data exploration status', () => {
     render(<DiscoveryShell snapshot={demoSnapshot} />);
 
     expect(screen.getByText('안동 관광권역 탐색')).not.toBeNull();
     expect(screen.getByRole('button', { name: /원도심·월영교권 선택/ })).not.toBeNull();
-    expect(screen.getByText('예시 데이터 · 정책 판단 금지')).not.toBeNull();
+    expect(screen.getByText('관광 데이터 탐색 자료')).not.toBeNull();
   });
 
   test('compares all three canonical regions', () => {
@@ -27,13 +27,13 @@ describe('discovery screens', () => {
     }
   });
 
-  test('shows the evidence source, spatial scope, period, and limitation', () => {
+  test('shows the evidence source, spatial scope, and period', () => {
     render(<EvidenceDetail snapshot={demoSnapshot} regionId="hahoemaeul" />);
 
     expect(screen.getAllByText('출처 API').length).toBeGreaterThan(0);
     expect(screen.getAllByText('공간 범위').length).toBeGreaterThan(0);
     expect(screen.getAllByText('기준 기간').length).toBeGreaterThan(0);
-    expect(screen.getByText('해석 한계')).not.toBeNull();
+    expect(screen.getByText('원천 데이터와 공간 단위를 함께 확인합니다')).not.toBeNull();
   });
 
   test('renders null live scores as pending rather than zero', () => {
@@ -50,7 +50,7 @@ describe('discovery screens', () => {
 
     render(<ComparisonView snapshot={liveSnapshot} />);
 
-    expect(screen.getAllByText('산출 대기').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0);
     expect(screen.queryByText('검토 점수 0')).toBeNull();
   });
 
@@ -76,7 +76,7 @@ describe('discovery screens', () => {
     }} />);
 
     expect(screen.queryByText('현재 우선 검토 권역')).toBeNull();
-    expect(screen.getByText('우선순위 산출 대기')).not.toBeNull();
+    expect(screen.getByText('권역을 선택해 확인하세요')).not.toBeNull();
   });
 
   test('labels a map selection as a selection rather than a recommendation', () => {
@@ -117,16 +117,17 @@ describe('discovery screens', () => {
       regions: demoSnapshot.regions.map((region, index) => ({ ...region, missingDataCount: index === 0 ? null : 0 })),
     }} />);
 
-    expect(screen.getByText('미집계')).not.toBeNull();
+    expect(screen.getByText('연결 데이터')).not.toBeNull();
     expect(screen.getAllByText('0건')).toHaveLength(2);
   });
 
-  test.each(['demo', 'live'] as const)('does not derive %s indicator values from an illustrative total', (mode) => {
-    render(<ComparisonView snapshot={{ ...demoSnapshot, mode, regions: demoSnapshot.regions.map((region) => ({ ...region, evaluation: undefined })) }} />);
-    const table = screen.getByRole('table');
-
-    expect(within(table).queryAllByText(/\d+점/)).toHaveLength(0);
-    expect(within(table).getAllByText('지표 근거 미등록')).toHaveLength(15);
+  test('demo comparison directs visitors to public data without synthetic scores', () => {
+    render(<ComparisonView snapshot={{ ...demoSnapshot, mode: 'demo', regions: demoSnapshot.regions.map((region) => ({ ...region, evaluation: undefined })) }} />);
+    expect(screen.queryByText('65점')).toBeNull();
+    expect(screen.queryByText('51점')).toBeNull();
+    expect(screen.getByRole('link', { name: '실제 공공데이터 탐색하기' })).not.toBeNull();
+    expect(screen.queryByText('사업기획 우선 검토')).toBeNull();
+    expect(screen.queryByText('현장검증 우선')).toBeNull();
   });
 
   test.each([72, null])('does not draw invented contributions for a total of %s', (potentialScore) => {
@@ -137,29 +138,27 @@ describe('discovery screens', () => {
 
     expect(screen.queryAllByText(/검토용 예시 \d+점/)).toHaveLength(0);
     expect(container.querySelectorAll('.contribution-track')).toHaveLength(0);
-    expect(within(screen.getByRole('region', { name: '지표 근거 상태' })).getAllByText('지표 근거 미등록 · 산출 대기')).toHaveLength(5);
+    expect(screen.getByRole('link', { name: '실제 공공데이터 탐색하기' })).not.toBeNull();
+    expect(screen.queryByText(/권역 분석은 .* 기준으로 계산했습니다/)).toBeNull();
   });
 
-  test('shows an illustrative condition score without presenting confidence as measured', () => {
+  test('shows a condition score with a neutral analysis status', () => {
     render(<EvidenceDetail snapshot={demoSnapshot} regionId="old-town-wolyeonggyo" />);
 
-    expect(screen.getByText('관광권역 여건 점수')).not.toBeNull();
-    expect(screen.getByText('65점 · 예시')).not.toBeNull();
-    expect(screen.queryByText('48점')).toBeNull();
-    expect(screen.getByText('모형 검증')).not.toBeNull();
-    expect(screen.getByText('검증 전')).not.toBeNull();
+    expect(screen.queryByText('관광권역 여건 점수')).toBeNull();
+    expect(screen.queryByText('65점')).toBeNull();
+    expect(screen.getByRole('link', { name: '실제 공공데이터 탐색하기' })).not.toBeNull();
   });
 
   test('uses independently calculated domain scores and exposes the same detailed total', () => {
     const { unmount } = render(<ComparisonView snapshot={demoSnapshot} />);
-    const table = screen.getByRole('table');
-    expect(within(table).getAllByText('80.0점')).toHaveLength(2);
-    expect(screen.getByRole('link', { name: '평가방법 실험실 열기' })).not.toBeNull();
+    expect(screen.queryByRole('table')).toBeNull();
+    expect(screen.getByRole('link', { name: '실제 공공데이터 탐색하기' })).not.toBeNull();
     unmount();
 
     render(<EvidenceDetail snapshot={demoSnapshot} regionId="old-town-wolyeonggyo" />);
-    expect(screen.getByRole('table', { name: '지표별 계산 추적표' })).not.toBeNull();
-    expect(within(screen.getByRole('region', { name: '평가 계산 결과' })).getByText('65.0점')).not.toBeNull();
+    expect(screen.queryByRole('table', { name: '지표별 계산 추적표' })).toBeNull();
+    expect(screen.queryByText('65.0점')).toBeNull();
   });
 
   test('names the evidence modal, traps keyboard focus, and returns focus after Escape', () => {

@@ -26,9 +26,8 @@ export default async function ActionsPage() {
         <div>
           <p className="workflow-eyebrow">우선 실행과제</p>
           <h1>분석 결과를 현장검증과 실행으로 연결합니다</h1>
-          <p>추천은 확정이 아니며, 각 과제의 근거와 현장 확인 항목을 함께 검토합니다.</p>
+          <p>각 과제의 근거와 현장 확인 항목을 검토하고 실행 상태를 관리합니다.</p>
         </div>
-        {snapshot.mode === 'demo' ? <p className="workflow-notice">{snapshot.disclaimer}</p> : null}
       </header>
       {loginRequired ? (
         <p className="workflow-notice" role="status">관리자 로그인 후 저장된 현장검증 과제를 볼 수 있습니다.</p>

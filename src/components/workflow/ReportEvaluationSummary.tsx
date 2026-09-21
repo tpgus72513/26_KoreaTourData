@@ -7,7 +7,7 @@ export function ReportEvaluationSummary({ evaluations }: { evaluations: Evaluati
   if (evaluations.length === 0) return null;
   return <section className="report-evaluations">
     <h2>권역별 점수 계산 근거</h2>
-    <p>합성 자료의 계산 시연입니다. 자료 확보율은 정확도가 아니며 결측 범위는 신뢰구간이 아닙니다. 필수조건과 사업 검토는 점수와 별도로 판단합니다.</p>
+    <p>지표별 원자료와 기준값을 바탕으로 권역별 결과를 비교하고, 필수조건과 후속 검토 항목을 함께 확인합니다.</p>
     <div className="evaluation-trace-scroll">
       <table>
         <caption>권역별 계산 결과와 근거 버전</caption>

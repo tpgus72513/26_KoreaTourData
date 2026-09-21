@@ -12,18 +12,18 @@ describe('evaluation laboratory', () => {
 
     expect(screen.getAllByRole('spinbutton')).toHaveLength(5);
     expect(within(screen.getByRole('group', { name: '영역 간 쌍대비교' })).getAllByRole('combobox')).toHaveLength(10);
-    expect(screen.getByText('시연용 비교행렬 · 전문가 조사 전')).not.toBeNull();
+    expect(screen.getByText('사용자 설정 비교행렬')).not.toBeNull();
     expect(screen.getByRole('table', { name: '지표별 계산 추적표' })).not.toBeNull();
   });
 
   test('recalculates immediately and withholds a total when an observation is blank', () => {
     render(<EvaluationLab />);
     const summary = screen.getByRole('region', { name: '평가 계산 결과' });
-    expect(within(summary).queryByText('산출 보류')).toBeNull();
+    expect(within(summary).queryByText('계산 조건 확인 필요')).toBeNull();
 
     fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '' } });
 
-    expect(within(summary).getByText('산출 보류')).not.toBeNull();
+    expect(within(summary).getByText('계산 조건 확인 필요')).not.toBeNull();
     expect(within(summary).getByText('80.0%')).not.toBeNull();
     expect(screen.getAllByText(/결측.*0점/).length).toBeGreaterThan(0);
   });
@@ -45,7 +45,7 @@ describe('evaluation laboratory', () => {
     fireEvent.change(comparisons[1], { target: { value: String(1 / 9) } });
 
     expect(screen.getByRole('alert').textContent).toContain('일관성');
-    expect(within(screen.getByRole('region', { name: '평가 계산 결과' })).getByText('산출 보류')).not.toBeNull();
+    expect(within(screen.getByRole('region', { name: '평가 계산 결과' })).getByText('계산 조건 확인 필요')).not.toBeNull();
     expect(screen.queryByRole('table', { name: '지표별 계산 추적표' })).toBeNull();
     expect(screen.queryByText('결측에 따른 계산상 범위')).toBeNull();
     expect(screen.queryByRole('region', { name: '가중치 민감도' })).toBeNull();
@@ -56,11 +56,11 @@ describe('evaluation laboratory', () => {
     const firstInput = screen.getAllByRole('spinbutton')[0] as HTMLInputElement;
     fireEvent.change(firstInput, { target: { value: '' } });
     fireEvent.change(within(screen.getByRole('group', { name: '영역 간 쌍대비교' })).getAllByRole('combobox')[0], { target: { value: '9' } });
-    fireEvent.change(screen.getByLabelText('시연 권역'), { target: { value: 'dosan-yekki' } });
+    fireEvent.change(screen.getByLabelText('평가 권역'), { target: { value: 'dosan-yekki' } });
 
     expect((screen.getAllByRole('spinbutton')[0] as HTMLInputElement).value).not.toBe('');
-    expect(within(screen.getByRole('region', { name: '평가 계산 결과' })).queryByText('산출 보류')).toBeNull();
-    expect(screen.getByText('필수조건 미충족 · 사업검토 제한')).not.toBeNull();
+    expect(within(screen.getByRole('region', { name: '평가 계산 결과' })).queryByText('계산 조건 확인 필요')).toBeNull();
+    expect(screen.getByText('필수조건 미충족 · 확인 항목')).not.toBeNull();
     for (const comparison of within(screen.getByRole('group', { name: '영역 간 쌍대비교' })).getAllByRole('combobox')) {
       expect((comparison as HTMLSelectElement).value).toBe('1');
     }

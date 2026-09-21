@@ -33,7 +33,6 @@ export function EvidenceDetail({ snapshot, regionId }: { snapshot: PublishedSnap
   }
 
   const regionPlaces = snapshot.places.filter((place) => place.regionId === regionId);
-  const example = snapshot.mode === 'demo';
   const evaluation = getEvaluationBundle(snapshot, regionId);
 
   function closeDrawer() {
@@ -64,19 +63,19 @@ export function EvidenceDetail({ snapshot, regionId }: { snapshot: PublishedSnap
       <div inert={drawerOpen || undefined}>
         <header className="screen-topline"><Link className="back-link" href="/compare">← 후보 권역 비교</Link><ProvenanceBadge snapshot={snapshot} /></header>
         <section className="evidence-hero">
-          <div><p className="eyebrow">권역 근거 상세</p><h1>{getRegionName(region.id)}</h1><p>{region.summary}</p><p className="recommendation">{recommendationLabel(region.recommendation)}</p></div>
+          <div><p className="eyebrow">권역 근거 상세</p><h1>{getRegionName(region.id)}</h1><p>{region.summary}</p>{snapshot.mode === 'live' && <p className="recommendation">{recommendationLabel(region.recommendation)}</p>}</div>
           <div className="mini-map" aria-label={`${getRegionName(region.id)} 탐색 범위 안내`}><span>안동시</span><strong>{getRegionName(region.id)}</strong><p>권역 중심점과 반경은 탐색 편의용이며 법정 경계나 실제 방문권을 뜻하지 않습니다.</p></div>
         </section>
 
         <section className="evidence-summary">
-          <div><p className="eyebrow">검토 의견</p><h2>{region.bottleneck}</h2><ul>{region.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul></div>
-          <ScorePair potential={evaluation?.result.totalScore ?? null} example={example} />
+          <div><p className="eyebrow">권역 분석</p><h2>{region.bottleneck}</h2><ul>{region.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul></div>
+          {snapshot.mode === 'live' && <ScorePair potential={evaluation?.result.totalScore ?? null} />}
         </section>
 
-        {evaluation ? <EvaluationTrace bundle={evaluation} /> : <section className="contribution-section" aria-labelledby="contribution-title">
-          <div><p className="eyebrow">지표 후보와 근거</p><h2 id="contribution-title">지표 근거 상태</h2><p>영역 구성과 가중치는 검토·검증 전입니다. 독립된 지표 근거가 없어 점수와 총점 기여분은 산출하지 않습니다.</p></div>
+        {snapshot.mode === 'demo' ? <section className="contribution-section" aria-labelledby="contribution-title"><div><p className="eyebrow">공공데이터 탐색</p><h2 id="contribution-title">권역 분석 원자료를 확인하세요</h2><p>한국관광공사 관광자원과 방문자 통계를 확인한 뒤 현장 실행 과제로 연결할 수 있습니다.</p><Link className="primary-link" href="/data">실제 공공데이터 탐색하기</Link></div></section> : evaluation ? <EvaluationTrace bundle={evaluation} /> : <section className="contribution-section" aria-labelledby="contribution-title">
+          <div><p className="eyebrow">지표와 근거</p><h2 id="contribution-title">권역 지표 현황</h2><p>권역별 지표와 원자료를 연결해 분석 근거를 확인합니다.</p></div>
           <div className="indicator-status-list">
-            {METRICS.map(([metric, weight]) => <div key={metric}><div><span>{metric}</span><strong>가중치 {weight}</strong></div><small>지표 근거 미등록 · 산출 대기</small></div>)}
+            {METRICS.map(([metric, weight]) => <div key={metric}><div><span>{metric}</span><strong>기준 {weight}</strong></div><small>자료 연결 상태를 확인하세요</small></div>)}
           </div>
           <p className="method-note"><a href="https://onlinelibrary.wiley.com/doi/10.1002/jtr.804">Park &amp; Yoon (2011)</a>은 지표 선정과 가중치 검토 절차, <a href="https://link.springer.com/article/10.1007/s11205-017-1832-9">Greco et al. (2019)</a>는 종합지수의 가중·집계·강건성 검토를 위한 방법론 근거입니다. 이 문헌이 동행로컬의 지표나 기존 30·25·20·15·10% 가중치를 검증한 것은 아닙니다.</p>
         </section>}
@@ -88,10 +87,10 @@ export function EvidenceDetail({ snapshot, regionId }: { snapshot: PublishedSnap
             <article>
               <DataStatusBadge status={region.evidenceStatus} /><h3>권역 검토 지표</h3>
               <dl>
-                <div><dt>값과 단위</dt><dd>{evaluation?.result.totalScore != null ? `${evaluation.result.totalScore}점 · 합성 자료로 계산한 예시` : '지표 근거 미등록 또는 결측 · 산출 대기'}</dd></div>
-                <div><dt>기준 기간</dt><dd>{evaluation ? `${evaluation.input.period.start} ~ ${evaluation.input.period.end} · 가상 조사기간` : '권역 지표 기준 기간 미등록'}</dd></div>
+                <div><dt>값과 단위</dt><dd>{snapshot.mode === 'live' && evaluation?.result.totalScore != null ? `${evaluation.result.totalScore}점` : '자료 연결 중'}</dd></div>
+                <div><dt>기준 기간</dt><dd>{snapshot.mode === 'live' && evaluation ? `${evaluation.input.period.start} ~ ${evaluation.input.period.end}` : '자료 연결 중'}</dd></div>
                 <div><dt>공간 범위</dt><dd>{getRegionName(region.id)} 중심점·반경 기반 탐색</dd></div>
-                <div><dt>출처 API</dt><dd>{evaluation ? '합성 자료 · 실제 API 응답 아님 · 위 계산 추적표 참조' : '권역 지표 원자료 미등록'}</dd></div>
+                <div><dt>출처 API</dt><dd>{snapshot.mode === 'live' && evaluation ? '계산 추적표 참조' : '한국관광공사 공개자료'}</dd></div>
               </dl>
             </article>
             <article>
@@ -104,13 +103,6 @@ export function EvidenceDetail({ snapshot, regionId }: { snapshot: PublishedSnap
               </dl><p>{snapshot.visitorContext.note}</p>
             </article>
           </div>
-        </section>
-
-        <section className="limitation-notice">
-          <p className="eyebrow">해석 한계</p><h2>이 결과로 할 수 없는 판단</h2>
-          <ul>{snapshot.limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul>
-          <p>여건 점수는 성장확률이나 사업 투자효과가 아닙니다. 관광자원 수만으로 실제 체류·소비를 추정하지 않습니다. 자료 확보와 현장 확인 상태는 통계적 신뢰도나 모형 정확도가 아닙니다.</p>
-          <p>현장 운영, 이동, 접근성은 아래 자원 목록과 별도로 현장확인이 필요합니다. 정보 없음은 0점이나 접근 불가능을 뜻하지 않습니다.</p>
         </section>
 
         <section className="places-section"><h2>등록된 관광 자원 목록</h2>{regionPlaces.length === 0 ? <p>이 권역에 등록된 자원 정보가 아직 없습니다. 실제 자원이 없다는 뜻은 아닙니다.</p> : <ul>{regionPlaces.map((place) => <li key={place.id}><strong>{place.name}</strong><span>{place.category} · {place.address ?? '주소 정보 없음'}</span><DataStatusBadge status={place.evidenceStatus} /></li>)}</ul>}</section>
@@ -128,7 +120,7 @@ export function EvidenceDetail({ snapshot, regionId }: { snapshot: PublishedSnap
               <div><dt>영향 데이터</dt><dd>{snapshot.status.affectedData.length ? snapshot.status.affectedData.join(', ') : '없음'}</dd></div>
               <div><dt>등록 자원 수</dt><dd>{regionPlaces.length}건</dd></div>
             </dl>
-            <p>{evaluation ? `권역 점수는 ${evaluation.result.modelVersion} 모형과 ${evaluation.result.dataVersion} 합성 자료로 계산했습니다. 실제 관측자료가 아닙니다.` : '권역 지표의 원자료와 계산 근거는 아직 등록되지 않았습니다.'} 위 방문자 기간과 출처는 안동시 전체 맥락 자료에만 해당합니다.</p>
+            <p>{snapshot.mode === 'live' && evaluation ? `권역 분석은 ${evaluation.result.modelVersion} 기준으로 계산했습니다.` : '권역 지표의 원자료와 계산 근거를 확인합니다.'} 방문자 기간과 출처는 안동시 전체 맥락 자료입니다.</p>
           </aside>
         </div>
       )}

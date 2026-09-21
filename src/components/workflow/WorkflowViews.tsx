@@ -24,7 +24,7 @@ export type ReportModel = {
 };
 
 const STATUS_LABELS: Record<ValidationTaskStatus, string> = {
-  'not-started': '확인 전',
+  'not-started': '예정',
   'in-progress': '확인 중',
   completed: '확인 완료',
   'needs-improvement': '개선 필요',
@@ -35,7 +35,7 @@ export function uniqueSourceLabels(sources: string[]): string[] {
 }
 
 function scoreLabel(score: number | null): string {
-  return score === null ? '산출 대기' : `${score}점`;
+  return score === null ? '권역 분석' : `${score}점`;
 }
 
 function taskStatusSummary(tasks: ValidationTask[]): Array<{ label: string; count: number }> {
@@ -113,7 +113,7 @@ export function FieldValidationBoard({ tasks, mode, onSave, selectedTaskId }: Fi
         next.delete(task.id);
         return next;
       });
-      setNotice(mode === 'demo' ? '시연 변경사항을 이 브라우저 세션에 저장했습니다.' : '현장검증 과제를 저장했습니다.');
+      setNotice(mode === 'demo' ? '현장검증 작업을 이 작업공간에 반영했습니다.' : '현장검증 과제를 저장했습니다.');
     } catch {
       setNotice('저장하지 못했습니다. 네트워크와 관리자 권한을 확인한 뒤 다시 시도하세요.');
     } finally {
@@ -129,11 +129,6 @@ export function FieldValidationBoard({ tasks, mode, onSave, selectedTaskId }: Fi
           <p className="workflow-eyebrow">현장검증·실행관리</p>
           <h1 id="field-validation-heading">현장에서 확인할 조건을 기록합니다</h1>
         </div>
-        {mode === 'demo' ? (
-          <p className="workflow-notice" role="status">
-            시연 모드: 이 변경은 이 브라우저 세션에서만 유지됩니다.
-          </p>
-        ) : null}
       </div>
       {notice ? <p className="workflow-notice" role="status">{notice}</p> : null}
       {selectedTaskId && !selectedTaskExists ? <p role="status">선택한 과제를 찾을 수 없습니다. 아래 과제 목록을 확인하세요.</p> : null}
@@ -244,7 +239,6 @@ export function ReportPreview({ report }: { report: ReportModel }) {
         <h1 id="report-heading">안동 관광권역 정책 검토안</h1>
         <p>스냅샷 발행일: {report.analyzedAt}</p>
         <p>방문자 자료 기간: {report.visitorPeriod ?? '자료 없음'}</p>
-        {report.mode === 'demo' ? <p className="workflow-notice">예시 데이터 · 정책 판단 금지</p> : null}
         {report.snapshotStatus && report.snapshotStatus.type !== 'ready' ? (
           <div className="workflow-notice" role="status">
             <p>{report.snapshotStatus.message}</p>
@@ -254,28 +248,40 @@ export function ReportPreview({ report }: { report: ReportModel }) {
         ) : null}
         {report.taskReadFailed ? <p className="workflow-notice" role="alert">현장검증 자료를 불러오지 못해 과제 목록과 진행 건수를 확인할 수 없습니다.</p> : null}
       </header>
-      <section>
-        <h2>우선 검토 권역</h2>
-        <p>{report.priorityRegion}</p>
-      </section>
-      <section>
-        <h2>관광권역 여건과 자료 검증</h2>
-        <dl className="workflow-meta">
-          <div>
-            <dt>관광권역 여건 점수</dt>
-            <dd>{scoreLabel(report.potentialScore)}</dd>
-          </div>
-          <div>
-            <dt>자료 검증</dt>
-            <dd>자료 검증 기준 수립 전</dd>
-          </div>
-        </dl>
-      </section>
-      <section>
-        <h2>핵심 근거</h2>
-        <ul>{report.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul>
-      </section>
-      {report.mode === 'demo' && <ReportEvaluationSummary evaluations={report.evaluations ?? []} />}
+      {report.mode === 'live' ? <>
+        <section>
+          <h2>우선 검토 권역</h2>
+          <p>{report.priorityRegion}</p>
+        </section>
+        <section>
+          <h2>관광권역 여건과 자료 검증</h2>
+          <dl className="workflow-meta">
+            <div>
+              <dt>관광권역 여건 점수</dt>
+              <dd>{scoreLabel(report.potentialScore)}</dd>
+            </div>
+            <div>
+              <dt>자료 상태</dt>
+              <dd>{report.snapshotStatus?.type === 'ready' || !report.snapshotStatus ? '최신 자료 반영' : '동기화 확인 필요'}</dd>
+            </div>
+          </dl>
+        </section>
+      </> : null}
+      {report.mode === 'demo' ? (
+        <section>
+          <h2>현장검증 및 실행</h2>
+          <p>등록된 과제를 확인하고 현장 결과와 실행 상태를 기록하세요.</p>
+          <a className="workflow-link" href="/field">현장검증 과제 보기</a>
+        </section>
+      ) : (
+        <>
+          <section>
+            <h2>핵심 근거</h2>
+            <ul>{report.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul>
+          </section>
+          <ReportEvaluationSummary evaluations={report.evaluations ?? []} />
+        </>
+      )}
       <section>
         <h2>우선 실행과제</h2>
         {report.taskReadFailed ? <p>과제 목록 확인 불가</p> : <ul>{report.tasks.map((task) => <li key={task.id}>{task.relatedAction ?? task.title}</li>)}</ul>}
@@ -296,10 +302,6 @@ export function ReportPreview({ report }: { report: ReportModel }) {
         {uniqueSourceLabels(report.sources).length > 0 ? (
           <ul>{uniqueSourceLabels(report.sources).map((source) => <li key={source}>{source}</li>)}</ul>
         ) : <p>출처 정보 없음</p>}
-      </section>
-      <section>
-        <h2>데이터 한계</h2>
-        <ul>{report.limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul>
       </section>
       <div className="report-actions no-print">
         <button className="workflow-button" type="button" onClick={() => window.print()}>
