@@ -10,6 +10,7 @@ type WorkflowShellProps = {
 };
 
 const navigation = [
+  { href: '/data', label: '실제 공공데이터' },
   { href: '/', label: '관광권역 탐색' },
   { href: '/compare', label: '후보 권역 비교' },
   { href: '/evaluation', label: '평가방법 실험실' },

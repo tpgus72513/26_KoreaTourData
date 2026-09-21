@@ -8,6 +8,7 @@ const pageContracts = [
   { path: '/regions/old-town-wolyeonggyo', text: '원도심·월영교권' },
   { path: '/actions', text: '우선 실행과제' },
   { path: '/field', text: '현장검증' },
+  { path: '/data', text: '한국관광공사 OpenAPI 실제 응답' },
   { path: '/evaluation', text: '평가방법 실험실' },
   { path: '/report', text: '정책 검토안' },
 ];

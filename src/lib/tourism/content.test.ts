@@ -10,6 +10,9 @@ const contentPayload = (item: unknown, totalCount = Array.isArray(item) ? item.l
 });
 
 describe('normalizePlaceItems', () => {
+  it('excludes the zero-coordinate sentinel instead of treating it as a located Andong resource', () => {
+    expect(normalizePlaceItems(contentPayload({ contentid: '2826888', title: '좌표 미제공 여행 코스', mapx: '0', mapy: '0' }))).toEqual([]);
+  });
   it('returns an empty list for missing items or items without coordinates', () => {
     expect(normalizePlaceItems({ response: { body: {} } })).toEqual([]);
     expect(

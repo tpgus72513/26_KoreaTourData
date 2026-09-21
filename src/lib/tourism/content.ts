@@ -215,5 +215,7 @@ function categoryFromContentType(contentType: unknown): TourismPlaceCategory {
 }
 
 function isCoordinatePair(latitude: number, longitude: number): boolean {
-  return latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
+  // The provider uses (0, 0) when a course/resource has no usable location.
+  return !(latitude === 0 && longitude === 0) &&
+    latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
 }

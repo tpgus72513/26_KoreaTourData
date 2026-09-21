@@ -261,7 +261,7 @@ export function createPostgresSyncRepository(database: Database) {
   };
 }
 
-function createPublication({
+export function createPublication({
   date,
   now,
   visitorRecords,
@@ -323,7 +323,7 @@ function createPublication({
   };
 }
 
-function validateBatchSources(date: string, visitorRecords: VisitorRecord[], places: TourismPlace[]): void {
+export function validateBatchSources(date: string, visitorRecords: VisitorRecord[], places: TourismPlace[]): void {
   const identities = new Set<string>();
   for (const record of visitorRecords) {
     if (record.baseYmd !== date || record.signguNm !== '안동시' || !record.signguCode.trim() ||

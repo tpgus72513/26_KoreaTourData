@@ -37,6 +37,7 @@ export function DiscoveryShell({ snapshot }: { snapshot: PublishedSnapshot }) {
       <aside className="side-navigation" aria-label="주요 메뉴">
         <p className="eyebrow">관광 의사결정 도구</p>
         <nav>
+          <Link href="/data">실제 공공데이터</Link>
           <Link aria-current="page" href="/">관광권역 탐색</Link>
           <Link href="/compare">후보 권역 비교</Link>
           <Link href="/evaluation">평가방법 실험실</Link>

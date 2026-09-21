@@ -1,0 +1,31 @@
+.public-data-page { max-width: 1300px; margin: auto; padding: 24px 36px 72px; }
+.public-data-header { display: flex; justify-content: space-between; align-items: center; gap: 24px; border-bottom: 1px solid var(--color-border); padding-bottom: 20px; }
+.public-data-header nav, .public-data-links { display: flex; gap: 18px; flex-wrap: wrap; }
+.public-data-header nav a { color: var(--color-text); font-size: 14px; }
+.public-data-intro { padding: 50px 0 28px; max-width: 960px; }
+.public-data-intro h1 { font-size: clamp(30px, 4.1vw, 52px); letter-spacing: -.055em; line-height: 1.25; margin: 14px 0 20px; }
+.public-data-intro > p:not(.eyebrow) { color: var(--color-muted); }
+.public-data-badge { display: inline-block; padding: 12px 16px; background: #e1eee7; border-left: 3px solid var(--color-primary); font-size: 14px; }
+.public-data-metrics { display: grid; grid-template-columns: repeat(3, 1fr); border-block: 1px solid var(--color-border); }
+.public-data-metrics article { padding: 26px 24px; border-right: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 8px; }
+.public-data-metrics article:first-child { padding-left: 0; }.public-data-metrics article:last-child { border: 0; }
+.public-data-metrics strong { font-size: 36px; letter-spacing: -.04em; }.public-data-metrics small { color: var(--color-muted); }
+.public-data-section { padding: 36px 0; border-bottom: 1px solid var(--color-border); }
+.public-data-section h2 { margin: 8px 0 16px; font-size: 27px; letter-spacing: -.045em; }
+.public-data-table-wrap { overflow-x: auto; margin-top: 24px; }
+.public-data-table-wrap table { width: 100%; border-collapse: collapse; white-space: nowrap; font-size: 14px; }
+.public-data-table-wrap th, .public-data-table-wrap td { padding: 18px 12px; border-bottom: 1px solid var(--color-border); text-align: left; }
+.public-data-table-wrap thead { background: #e9ede6; }.selected-row { background: #edf4ec; }
+.public-data-table-wrap button { padding: 0; border: 0; color: var(--color-primary); background: transparent; text-decoration: underline; cursor: pointer; font-weight: 700; }
+.public-data-note { font-size: 13px; color: var(--color-muted); margin-top: 20px; }
+.public-data-filters { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; padding: 12px 0 20px; }
+.public-data-filters select { padding: 8px; margin-left: 8px; border: 1px solid var(--color-border); border-radius: 4px; background: white; }
+.public-data-page .map-visual { min-height: 420px; }.public-data-page .map-frame { overflow: hidden; }
+.public-data-page details { padding: 20px 0; }.public-data-page summary { cursor: pointer; font-weight: 700; }
+.public-data-place-list { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.public-data-place-list li { padding: 16px; border: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 5px; }
+.public-data-place-list small { color: var(--color-muted); }
+.public-data-next-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }.public-data-next-grid article { padding: 22px; background: #fff; border-top: 3px solid var(--color-primary); }
+.public-data-next-grid h3 { margin-top: 0; }.public-data-next-grid p { font-size: 15px; line-height: 1.75; }
+.public-data-provenance > div { display: grid; grid-template-columns: 110px 1fr; gap: 18px; padding: 15px 0; border-bottom: 1px solid var(--color-border); }.public-data-provenance dt { font-weight: 700; }.public-data-provenance dd { margin: 0; }
+@media (max-width: 760px) { .public-data-page { padding: 18px 20px 44px; }.public-data-header { align-items: start; flex-direction: column; gap: 14px; }.public-data-header nav { gap: 12px; }.public-data-intro { padding-top: 32px; }.public-data-metrics { grid-template-columns: 1fr; }.public-data-metrics article, .public-data-metrics article:first-child { padding: 20px 0; border-right: 0; border-bottom: 1px solid var(--color-border); }.public-data-metrics strong { font-size: 30px; }.public-data-next-grid, .public-data-place-list { grid-template-columns: 1fr; }.public-data-provenance > div { grid-template-columns: 1fr; gap: 5px; }.public-data-section h2 { font-size: 23px; }.public-data-page .map-visual { min-height: 330px; } }

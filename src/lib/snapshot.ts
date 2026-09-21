@@ -89,7 +89,7 @@ function liveEmptySnapshot(message: string, status: 'empty' | 'error' = 'empty')
   };
 }
 
-function toLiveSnapshot(value: unknown): PublishedSnapshot | undefined {
+export function toLiveSnapshot(value: unknown): PublishedSnapshot | undefined {
   const payload = typeof value === 'string' ? tryParseJson(value) : value;
   if (!isPublishedLiveSnapshot(payload)) {
     return undefined;

@@ -1,7 +1,6 @@
+.env*
+!.env.example
 node_modules/
 .next/
 coverage/
 *.tsbuildinfo
-.env*
-!.env.example
-.vercel
