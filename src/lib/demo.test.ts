@@ -9,8 +9,21 @@ describe('demoSnapshot', () => {
 
     for (const region of demoSnapshot.regions) {
       expect(region.evidenceStatus).toBe('example');
-      expect(region.potentialScore).toEqual(expect.any(Number));
-      expect(region.confidenceScore).toEqual(expect.any(Number));
+      expect(region.confidenceScore).toBeNull();
+    }
+  });
+
+  test('uses the documented synthetic calculation instead of arbitrary totals', () => {
+    expect(demoSnapshot.regions[0].potentialScore).toBe(65);
+    expect(demoSnapshot.regions[1].potentialScore).toBeNull();
+    expect(demoSnapshot.regions[2].potentialScore).toBe(51);
+  });
+
+  test('does not recommend business planning before mandatory conditions are checked', () => {
+    for (const region of demoSnapshot.regions) {
+      if (region.evaluation?.result.gateStatus !== 'reviewable') {
+        expect(region.recommendation).not.toBe('business-planning');
+      }
     }
   });
 });

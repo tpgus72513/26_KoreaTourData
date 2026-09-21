@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { fetchAndongPlaces, normalizePlaceItems } from './content';
 
-const contentPayload = (item: unknown, totalCount = 1) => ({
+const contentPayload = (item: unknown, totalCount = Array.isArray(item) ? item.length : 1) => ({
   response: {
     header: { resultCode: '0000', resultMsg: 'NORMAL_SERVICE' },
     body: { totalCount, items: { item } },
@@ -53,6 +53,35 @@ describe('normalizePlaceItems', () => {
 });
 
 describe('fetchAndongPlaces', () => {
+  const place = { contentid: 'one', title: '월영교', mapx: '128.7742', mapy: '36.5682' };
+  const placeFetch = (...payloads: unknown[]) => {
+    const responses = [contentPayload({ code: '35', name: '경상북도' }), contentPayload({ code: '11', name: '안동시' }), ...payloads];
+    return vi.fn(async () => new Response(JSON.stringify(responses.shift())));
+  };
+
+  it('rejects duplicate content IDs', async () => {
+    await expect(fetchAndongPlaces({ serviceKey: 'test', fetchImpl: placeFetch(contentPayload([place, place])) }))
+      .rejects.toThrow(/duplicate/i);
+  });
+
+  it('rejects an incomplete content page', async () => {
+    await expect(fetchAndongPlaces({ serviceKey: 'test', fetchImpl: placeFetch(contentPayload(place, 2)) }))
+      .rejects.toThrow(/page/i);
+  });
+
+  it('checks raw pagination before filtering coordinate-less places', async () => {
+    const first = Array.from({ length: 100 }, (_, index) => ({ ...place, contentid: String(index) }));
+    first[0].mapx = '';
+    await expect(fetchAndongPlaces({ serviceKey: 'test', fetchImpl: placeFetch(contentPayload(first, 101), contentPayload(place, 101)) }))
+      .resolves.toHaveLength(100);
+  });
+
+  it('rejects changing totals on later pages', async () => {
+    const first = Array.from({ length: 100 }, (_, index) => ({ ...place, contentid: String(index) }));
+    await expect(fetchAndongPlaces({ serviceKey: 'test', fetchImpl: placeFetch(contentPayload(first, 101), contentPayload(place, 102)) }))
+      .rejects.toThrow(/totalCount/i);
+  });
+
   it('discovers Gyeongbuk and Andong codes before fetching valid coordinate places', async () => {
     const fetchImpl = vi
       .fn()

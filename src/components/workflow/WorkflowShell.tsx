@@ -5,12 +5,14 @@ import { AdminSessionControl } from './AdminSessionControl';
 
 type WorkflowShellProps = {
   analyzedAt: string;
+  visitorPeriod?: { start: string; end: string };
   children: ReactNode;
 };
 
 const navigation = [
   { href: '/', label: '관광권역 탐색' },
   { href: '/compare', label: '후보 권역 비교' },
+  { href: '/evaluation', label: '평가방법 실험실' },
   { href: '/actions', label: '우선 실행과제' },
   { href: '/field', label: '현장검증' },
   { href: '/report', label: '정책 검토안' },
@@ -20,7 +22,11 @@ export function displayAnalysisDate(value: string): string {
   return !value || value.startsWith('1970-01-01') ? '미발행' : value.slice(0, 10);
 }
 
-export function WorkflowShell({ analyzedAt, children }: WorkflowShellProps) {
+export function displayVisitorPeriod(period?: { start: string; end: string }): string {
+  return period?.start && period.end ? (period.start === period.end ? period.start : `${period.start} ~ ${period.end}`) : '자료 없음';
+}
+
+export function WorkflowShell({ analyzedAt, visitorPeriod, children }: WorkflowShellProps) {
   const displayDate = displayAnalysisDate(analyzedAt);
   return (
     <div className="workflow-app">
@@ -30,7 +36,8 @@ export function WorkflowShell({ analyzedAt, children }: WorkflowShellProps) {
         </Link>
         <div className="workflow-context" aria-label="현재 분석 맥락">
           <strong>안동시</strong>
-          <span>분석 기준일 {displayDate}</span>
+          <span>스냅샷 발행일 {displayDate}</span>
+          {visitorPeriod ? <span>방문자 자료 기간 {displayVisitorPeriod(visitorPeriod)}</span> : null}
         </div>
         <AdminSessionControl />
       </header>

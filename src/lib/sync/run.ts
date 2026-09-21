@@ -4,12 +4,14 @@ import { getDatabase, type Database } from '../db';
 import { REGIONS, type PublishedSnapshot, type TourismPlace } from '../domain';
 import { fetchAndongPlaces } from '../tourism/content';
 import { fetchAndongVisitors, type VisitorRecord } from '../tourism/datalab';
+import { withTourismDeadline } from '../tourism/request';
 
 const LEASE_NAME = 'andong-tourism-sync';
 const LEASE_DURATION_MS = 10 * 60 * 1000;
 const DEFAULT_DATA_LAG_DAYS = 30;
 const MINIMUM_DATA_LAG_DAYS = 1;
 const MAXIMUM_DATA_LAG_DAYS = 90;
+const INGESTION_TIMEOUT_MS = 35_000;
 
 export type SyncPublication = {
   date: string;
@@ -39,8 +41,9 @@ export type SyncDependencies = {
     serviceKey: string;
     startYmd: string;
     endYmd: string;
+    signal?: AbortSignal;
   }) => Promise<VisitorRecord[]>;
-  fetchPlaces: (input: { serviceKey: string }) => Promise<TourismPlace[]>;
+  fetchPlaces: (input: { serviceKey: string; signal?: AbortSignal }) => Promise<TourismPlace[]>;
   createLeaseToken: () => string;
 };
 
@@ -68,24 +71,23 @@ export async function runSyncBatchWithDependencies(
       return { status: 'busy', date };
     }
 
-    const fetched = await Promise.all([
+    const fetched = await withTourismDeadline((signal) => Promise.all([
       dependencies.fetchVisitors({
         serviceKey: options.serviceKey,
         startYmd: date,
         endYmd: date,
+        signal,
       }).then((records) => {
         visitorRecords = records;
         return records;
       }),
-      dependencies.fetchPlaces({ serviceKey: options.serviceKey }).then((places) => {
+      dependencies.fetchPlaces({ serviceKey: options.serviceKey, signal }).then((places) => {
         fetchedPlaces = places;
         return places;
       }),
-    ]);
+    ]), INGESTION_TIMEOUT_MS);
     [visitorRecords, fetchedPlaces] = fetched;
-    if (visitorRecords.length === 0) {
-      throw new Error('No Andong visitor records are available for the scheduled date');
-    }
+    validateBatchSources(date, visitorRecords, fetchedPlaces);
     const publication = createPublication({ date, now, visitorRecords, places: fetchedPlaces });
     await dependencies.publish(publication);
     return { status: 'published', date };
@@ -304,7 +306,7 @@ function createPublication({
         summary: '산출 대기',
         reasons: [],
         bottleneck: '권역별 독립 관측값이 필요합니다.',
-        missingDataCount: 0,
+        missingDataCount: null,
       })),
       places: normalizedPlaces,
       limitations: [
@@ -319,6 +321,33 @@ function createPublication({
       },
     },
   };
+}
+
+function validateBatchSources(date: string, visitorRecords: VisitorRecord[], places: TourismPlace[]): void {
+  const identities = new Set<string>();
+  for (const record of visitorRecords) {
+    if (record.baseYmd !== date || record.signguNm !== '안동시' || !record.signguCode.trim() ||
+        !record.visitorType.trim() || !Number.isFinite(record.count) || record.count < 0) {
+      throw new Error('Invalid Andong visitor records for the scheduled date');
+    }
+    const identity = `${record.baseYmd}:${record.signguCode}:${record.visitorType}`;
+    if (identities.has(identity)) throw new Error('Duplicate Andong visitor records');
+    identities.add(identity);
+  }
+  const outsideVisitors = visitorRecords.filter((record) => record.visitorType === '2');
+  if (outsideVisitors.length !== 1) {
+    throw new Error('A unique outside-visitor record is required for the scheduled date');
+  }
+  if (places.length === 0) throw new Error('No usable Andong tourism places are available');
+  const placeIds = new Set<string>();
+  for (const place of places) {
+    if (!place.id.trim() || !place.name.trim() || !Number.isFinite(place.latitude) ||
+        !Number.isFinite(place.longitude) || Math.abs(place.latitude) > 90 || Math.abs(place.longitude) > 180) {
+      throw new Error('Invalid Andong tourism places');
+    }
+    if (placeIds.has(place.id)) throw new Error('Duplicate Andong tourism places');
+    placeIds.add(place.id);
+  }
 }
 
 async function inTransaction(

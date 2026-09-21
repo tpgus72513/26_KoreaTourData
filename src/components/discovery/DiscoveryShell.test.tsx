@@ -1,5 +1,5 @@
 import React from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { demoSnapshot } from '../../lib/demo';
@@ -42,6 +42,7 @@ describe('discovery screens', () => {
       mode: 'live' as const,
       regions: demoSnapshot.regions.map((region) => ({
         ...region,
+        evaluation: undefined,
         potentialScore: null,
         confidenceScore: null,
       })),
@@ -64,6 +65,118 @@ describe('discovery screens', () => {
   test('labels an unissued live snapshot date as unpublished', () => {
     render(<DiscoveryShell snapshot={{ ...demoSnapshot, mode: 'live', publishedAt: '1970-01-01T00:00:00.000Z' }} />);
 
-    expect(screen.getByText('분석 기준일 미발행')).not.toBeNull();
+    expect(screen.getByText('발행일 미발행')).not.toBeNull();
+  });
+
+  test('does not select a priority region when every recommendation is pending', () => {
+    render(<ComparisonView snapshot={{
+      ...demoSnapshot,
+      mode: 'live',
+      regions: demoSnapshot.regions.map((region) => ({ ...region, recommendation: 'pending' })),
+    }} />);
+
+    expect(screen.queryByText('현재 우선 검토 권역')).toBeNull();
+    expect(screen.getByText('우선순위 산출 대기')).not.toBeNull();
+  });
+
+  test('labels a map selection as a selection rather than a recommendation', () => {
+    render(<DiscoveryShell snapshot={demoSnapshot} />);
+    fireEvent.click(screen.getByRole('button', { name: '하회마을권 선택' }));
+
+    expect(screen.getByText('현재 선택 권역')).not.toBeNull();
+    expect(screen.queryByText('현재 우선 검토')).toBeNull();
+  });
+
+  test('uses the observation period separately from the snapshot publication date', () => {
+    render(<DiscoveryShell snapshot={{
+      ...demoSnapshot,
+      publishedAt: '2026-09-21T00:00:00.000Z',
+      visitorContext: { ...demoSnapshot.visitorContext, period: { start: '2026-08-20', end: '2026-08-22' } },
+    }} />);
+
+    expect(screen.getAllByText('안동시 방문자 기준 기간 2026-08-20 ~ 2026-08-22').length).toBeGreaterThan(0);
+    expect(screen.queryByText(/분석 기준일/)).toBeNull();
+    expect(screen.getByText(/발행일/)).not.toBeNull();
+  });
+
+  test('does not mark an empty live snapshot as verified', () => {
+    render(<DiscoveryShell snapshot={{
+      ...demoSnapshot,
+      mode: 'live',
+      places: [],
+      status: { ...demoSnapshot.status, type: 'empty', message: '발행된 자료 없음' },
+    }} />);
+
+    expect(screen.queryByText('데이터 확인 상태: 확인된 데이터')).toBeNull();
+    expect(screen.getByText('자료 모드: 라이브')).not.toBeNull();
+  });
+
+  test('keeps an unassessed missing-data count distinct from an observed zero', () => {
+    render(<ComparisonView snapshot={{
+      ...demoSnapshot,
+      regions: demoSnapshot.regions.map((region, index) => ({ ...region, missingDataCount: index === 0 ? null : 0 })),
+    }} />);
+
+    expect(screen.getByText('미집계')).not.toBeNull();
+    expect(screen.getAllByText('0건')).toHaveLength(2);
+  });
+
+  test.each(['demo', 'live'] as const)('does not derive %s indicator values from an illustrative total', (mode) => {
+    render(<ComparisonView snapshot={{ ...demoSnapshot, mode, regions: demoSnapshot.regions.map((region) => ({ ...region, evaluation: undefined })) }} />);
+    const table = screen.getByRole('table');
+
+    expect(within(table).queryAllByText(/\d+점/)).toHaveLength(0);
+    expect(within(table).getAllByText('지표 근거 미등록')).toHaveLength(15);
+  });
+
+  test.each([72, null])('does not draw invented contributions for a total of %s', (potentialScore) => {
+    const { container } = render(<EvidenceDetail snapshot={{
+      ...demoSnapshot,
+      regions: demoSnapshot.regions.map((region) => ({ ...region, potentialScore, evaluation: undefined })),
+    }} regionId="old-town-wolyeonggyo" />);
+
+    expect(screen.queryAllByText(/검토용 예시 \d+점/)).toHaveLength(0);
+    expect(container.querySelectorAll('.contribution-track')).toHaveLength(0);
+    expect(within(screen.getByRole('region', { name: '지표 근거 상태' })).getAllByText('지표 근거 미등록 · 산출 대기')).toHaveLength(5);
+  });
+
+  test('shows an illustrative condition score without presenting confidence as measured', () => {
+    render(<EvidenceDetail snapshot={demoSnapshot} regionId="old-town-wolyeonggyo" />);
+
+    expect(screen.getByText('관광권역 여건 점수')).not.toBeNull();
+    expect(screen.getByText('65점 · 예시')).not.toBeNull();
+    expect(screen.queryByText('48점')).toBeNull();
+    expect(screen.getByText('모형 검증')).not.toBeNull();
+    expect(screen.getByText('검증 전')).not.toBeNull();
+  });
+
+  test('uses independently calculated domain scores and exposes the same detailed total', () => {
+    const { unmount } = render(<ComparisonView snapshot={demoSnapshot} />);
+    const table = screen.getByRole('table');
+    expect(within(table).getAllByText('80.0점')).toHaveLength(2);
+    expect(screen.getByRole('link', { name: '평가방법 실험실 열기' })).not.toBeNull();
+    unmount();
+
+    render(<EvidenceDetail snapshot={demoSnapshot} regionId="old-town-wolyeonggyo" />);
+    expect(screen.getByRole('table', { name: '지표별 계산 추적표' })).not.toBeNull();
+    expect(within(screen.getByRole('region', { name: '평가 계산 결과' })).getByText('65.0점')).not.toBeNull();
+  });
+
+  test('names the evidence modal, traps keyboard focus, and returns focus after Escape', () => {
+    render(<EvidenceDetail snapshot={demoSnapshot} regionId="old-town-wolyeonggyo" />);
+    const opener = screen.getByRole('button', { name: '원자료 상세 열기' });
+    fireEvent.click(opener);
+
+    const dialog = screen.getByRole('dialog', { name: '표시된 근거의 범위' });
+    const closeButton = within(dialog).getByRole('button', { name: '닫기' });
+    expect(document.activeElement).toBe(closeButton);
+    expect(opener.closest('[inert]')).not.toBeNull();
+    expect(fireEvent.keyDown(closeButton, { key: 'Tab' })).toBe(false);
+    expect(fireEvent.keyDown(closeButton, { key: 'Tab', shiftKey: true })).toBe(false);
+    fireEvent.keyDown(closeButton, { key: 'Escape' });
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(opener);
+    expect(opener.closest('[inert]')).toBeNull();
   });
 });

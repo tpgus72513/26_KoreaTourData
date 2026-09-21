@@ -67,15 +67,17 @@ export function MapCanvas({ snapshot, places, selectedRegionId, onSelectRegion }
 
   return (
     <section className="map-frame" aria-label="안동 관광권역 지도">
+      <div className="map-visual">
       <div className="map-canvas" ref={mapElement} aria-hidden="true" />
       {mapState === 'loading' && <div className="map-loading-layer" role="status">지도를 준비하는 중</div>}
       {mapState === 'error' && <p className="map-error" role="status">지도 타일을 불러오지 못했습니다. 아래 목록으로 권역과 자원을 확인할 수 있습니다.</p>}
       <div className="map-legend" aria-label="지도 범례">
         <strong>지도 범례</strong>
         <span>원형: 관광권역 반경</span>
-        <span>핀: 확인된 관광 자원</span>
+        <span>{snapshot.mode === 'demo' ? '점: 예시 관광 자원' : '점: 공공 API 관광 자원'}</span>
       </div>
       <p className="map-attribution">© OpenStreetMap contributors · 지도 타일은 사전 로딩하지 않습니다.</p>
+      </div>
       <div className="map-fallback" aria-label="지도 대체 권역 목록">
         <h3>지도 대체 목록</h3>
         <p>{mapState === 'error' ? '지도 오류 중에도 이 목록은 계속 사용할 수 있습니다.' : '지도를 사용하지 않는 경우에도 이 목록으로 권역과 자원을 검토할 수 있습니다.'}</p>

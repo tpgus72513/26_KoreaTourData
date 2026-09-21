@@ -23,6 +23,6 @@ describe('WorkflowShell', () => {
   it('does not present the live-empty placeholder date as a real 1970 analysis date', () => {
     render(<WorkflowShell analyzedAt="1970-01-01"><p>화면 내용</p></WorkflowShell>);
 
-    expect(screen.getByText('분석 기준일 미발행')).toBeTruthy();
+    expect(screen.getByText('스냅샷 발행일 미발행')).toBeTruthy();
   });
 });

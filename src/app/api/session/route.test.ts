@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { DELETE, POST } from './route';
+import { ADMIN_SESSION_COOKIE, createAdminSession } from '../../../lib/auth';
+import { DELETE, GET, POST } from './route';
 
 const originalEnvironment = {
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
@@ -8,8 +9,33 @@ const originalEnvironment = {
 };
 
 afterEach(() => {
-  process.env.ADMIN_PASSWORD = originalEnvironment.ADMIN_PASSWORD;
-  process.env.SESSION_SECRET = originalEnvironment.SESSION_SECRET;
+  for (const [key, value] of Object.entries(originalEnvironment)) {
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
+  }
+});
+
+describe('GET /api/session', () => {
+  it('reports verified session state without exposing or refreshing a token', async () => {
+    process.env.SESSION_SECRET = 'a-long-local-test-secret';
+    const token = await createAdminSession();
+    const response = await GET(new Request('http://localhost/api/session', {
+      headers: { cookie: `${ADMIN_SESSION_COOKIE}=${token}` },
+    }));
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ authenticated: true });
+    expect(response.headers.get('cache-control')).toContain('no-store');
+    expect(response.headers.get('set-cookie')).toBeNull();
+  });
+
+  it.each([null, 'admin_session=invalid'])('does not authenticate an absent or invalid cookie: %s', async (cookie) => {
+    process.env.SESSION_SECRET = 'a-long-local-test-secret';
+    const response = await GET(new Request('http://localhost/api/session', {
+      headers: cookie ? { cookie } : {},
+    }));
+    expect(await response.json()).toEqual({ authenticated: false });
+  });
 });
 
 describe('POST /api/session', () => {

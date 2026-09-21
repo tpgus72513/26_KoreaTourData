@@ -5,7 +5,7 @@ import {
   normalizeVisitorItems,
 } from './datalab';
 
-const visitorPayload = (item: unknown, totalCount = 1) => ({
+const visitorPayload = (item: unknown, totalCount = Array.isArray(item) ? item.length : 1) => ({
   response: {
     header: { resultCode: '0000', resultMsg: 'NORMAL_SERVICE' },
     body: { totalCount, items: { item } },
@@ -75,6 +75,50 @@ describe('normalizeVisitorItems', () => {
 });
 
 describe('fetchAndongVisitors', () => {
+  const visitor = { baseYmd: '20260901', signguCode: '47170', signguNm: '안동시', touDivCd: '2', touNum: '0' };
+  it.each([
+    ['wrong day', { ...visitor, baseYmd: '20260831' }],
+    ['invalid calendar date', { ...visitor, baseYmd: '20260230' }],
+    ['invalid count', { ...visitor, touNum: '' }],
+  ])('rejects %s instead of returning partial visitor data', async (_name, item) => {
+    await expect(fetchAndongVisitors({ serviceKey: 'test', startYmd: '20260901', endYmd: '20260901',
+      fetchImpl: async () => new Response(JSON.stringify(visitorPayload(item))),
+    })).rejects.toThrow();
+  });
+
+  it('rejects duplicate municipality/date/type records', async () => {
+    await expect(fetchAndongVisitors({ serviceKey: 'test', startYmd: '20260901', endYmd: '20260901',
+      fetchImpl: async () => new Response(JSON.stringify(visitorPayload([visitor, visitor]))),
+    })).rejects.toThrow(/duplicate/i);
+  });
+
+  it.each([undefined, -1, 1.5, 'invalid'])('rejects malformed totalCount %s', async (totalCount) => {
+    const payload = visitorPayload(visitor);
+    Object.assign(payload.response.body, { totalCount });
+    await expect(fetchAndongVisitors({ serviceKey: 'test', startYmd: '20260901', endYmd: '20260901',
+      fetchImpl: async () => new Response(JSON.stringify(payload)),
+    })).rejects.toThrow(/totalCount/i);
+  });
+
+  it('rejects a truncated page before publishing partial visitors', async () => {
+    await expect(fetchAndongVisitors({ serviceKey: 'test', startYmd: '20260901', endYmd: '20260901',
+      fetchImpl: async () => new Response(JSON.stringify(visitorPayload(visitor, 1001))),
+    })).rejects.toThrow(/page/i);
+  });
+
+  it('collects the final page and rejects repeated identities across pages', async () => {
+    const first = Array.from({ length: 1000 }, (_, index) => ({ ...visitor, signguCode: String(index), signguNm: '다른 도시' }));
+    const fetchImpl = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify(visitorPayload(first, 1001))))
+      .mockResolvedValueOnce(new Response(JSON.stringify(visitorPayload(visitor, 1001))));
+    await expect(fetchAndongVisitors({ serviceKey: 'test', startYmd: '20260901', endYmd: '20260901', fetchImpl }))
+      .resolves.toMatchObject([{ count: 0 }]);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    const duplicateFetch = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify(visitorPayload(first, 1001))))
+      .mockResolvedValueOnce(new Response(JSON.stringify(visitorPayload(first[0], 1001))));
+    await expect(fetchAndongVisitors({ serviceKey: 'test', startYmd: '20260901', endYmd: '20260901', fetchImpl: duplicateFetch }))
+      .rejects.toThrow(/duplicate/i);
+  });
+
   it('requests DataLab without a municipality filter and keeps only Andong rows', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       new Response(
