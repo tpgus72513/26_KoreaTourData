@@ -4,13 +4,24 @@ import {
   ADMIN_SESSION_COOKIE,
   adminSessionMaxAgeSeconds,
   createAdminSession,
+  getAdminSessionFromCookie,
   isValidAdminPassword,
+  verifyAdminSession,
 } from '../../../lib/auth';
 
 export const runtime = 'nodejs';
 
 function noContent(): NextResponse {
   return new NextResponse(null, { status: 204 });
+}
+
+export async function GET(request: Request): Promise<NextResponse> {
+  const authenticated = await verifyAdminSession(
+    getAdminSessionFromCookie(request.headers.get('cookie')),
+  );
+  return NextResponse.json({ authenticated }, {
+    headers: { 'cache-control': 'private, no-store' },
+  });
 }
 
 export async function POST(request: Request): Promise<NextResponse> {

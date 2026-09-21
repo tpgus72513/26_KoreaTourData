@@ -1,7 +1,8 @@
 import '../../styles/workflow.css';
+import React from 'react';
 import { headers } from 'next/headers';
 
-import { ActionTaskCard } from '../../components/workflow/WorkflowViews';
+import { ActionsWorkflowClient } from '../../components/workflow/ActionsWorkflowClient';
 import { displayAnalysisDate, WorkflowShell } from '../../components/workflow/WorkflowShell';
 import { demoTasks } from '../../lib/demo';
 import { loadSnapshot } from '../../lib/snapshot';
@@ -19,7 +20,7 @@ export default async function ActionsPage() {
   const taskReadFailed = liveTaskRead?.failed ?? false;
 
   return (
-    <WorkflowShell analyzedAt={displayAnalysisDate(snapshot.publishedAt)}>
+    <WorkflowShell analyzedAt={displayAnalysisDate(snapshot.publishedAt)} visitorPeriod={snapshot.visitorContext.period}>
     <main className="workflow-page">
       <header className="workflow-heading">
         <div>
@@ -33,11 +34,8 @@ export default async function ActionsPage() {
         <p className="workflow-notice" role="status">관리자 로그인 후 저장된 현장검증 과제를 볼 수 있습니다.</p>
       ) : (
         <>
-          <section className="field-task-grid" aria-label="추천 실행과제">
-            {tasks.map((task) => <ActionTaskCard key={task.id} task={task} />)}
-          </section>
+          {!taskReadFailed ? <ActionsWorkflowClient initialTasks={tasks} mode={snapshot.mode} /> : null}
           {taskReadFailed ? <p className="workflow-notice" role="alert">저장된 현장검증 과제를 불러오지 못했습니다. 데이터베이스 상태를 확인하세요.</p> : null}
-          {tasks.length === 0 && !taskReadFailed ? <p className="workflow-notice">등록된 현장검증 과제가 없습니다.</p> : null}
         </>
       )}
     </main>

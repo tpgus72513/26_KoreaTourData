@@ -27,6 +27,38 @@ afterEach(() => {
 });
 
 describe('loadSnapshot', () => {
+  it('treats legacy pending regions with zero missing-data counts as unmeasured', async () => {
+    process.env.DATABASE_URL = 'postgresql://configured.example/with-local';
+    setDatabaseForTests(databaseWithRows([{
+      payload: { ...demoSnapshot, mode: 'live', regions: demoSnapshot.regions.map((region) => ({
+        ...region, potentialScore: null, confidenceScore: null, evidenceStatus: 'unknown',
+        recommendation: 'pending', missingDataCount: 0,
+      })) },
+      sync_state: 'ready',
+    }]));
+    const snapshot = await loadSnapshot();
+    expect(snapshot.status.type).toBe('ready');
+    expect(snapshot.regions.map((region) => region.missingDataCount)).toEqual([null, null, null]);
+  });
+
+  it.each([
+    { visitorContext: {} },
+    { regions: [null] },
+    { places: [null] },
+    { limitations: [1] },
+    { publishedAt: 'invalid' },
+    { visitorContext: { ...demoSnapshot.visitorContext, visitorCount: Number.NaN } },
+    { visitorContext: { ...demoSnapshot.visitorContext, period: { start: '2026-02-30', end: '2026-09-21' } } },
+    { regions: [{ ...demoSnapshot.regions[0], recommendation: 'invalid' }] },
+    { places: [{ ...demoSnapshot.places[0], latitude: Number.POSITIVE_INFINITY }] },
+  ])('rejects malformed nested payload %j', async (overrides) => {
+    process.env.DATABASE_URL = 'postgresql://configured.example/with-local';
+    setDatabaseForTests(databaseWithRows([{ payload: { ...demoSnapshot, mode: 'live', ...overrides }, sync_state: 'ready' }]));
+    const snapshot = await loadSnapshot();
+    expect(snapshot.status.type).toBe('empty');
+    expect(snapshot.places).toEqual([]);
+  });
+
   it('returns the explicitly labelled demonstration snapshot only when no database is configured', async () => {
     delete process.env.DATABASE_URL;
 

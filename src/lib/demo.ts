@@ -1,8 +1,9 @@
 import type { PublishedSnapshot, ValidationTask } from './domain';
+import { createDemoEvaluation } from './evaluation/catalog';
 
 const DEMO_DISCLAIMER = '예시 데이터 · 정책 판단 금지';
 
-export const demoSnapshot: PublishedSnapshot = {
+const baseDemoSnapshot: PublishedSnapshot = {
   mode: 'demo',
   publishedAt: '2026-09-21T00:00:00.000Z',
   disclaimer: DEMO_DISCLAIMER,
@@ -17,8 +18,8 @@ export const demoSnapshot: PublishedSnapshot = {
   regions: [
     {
       id: 'old-town-wolyeonggyo',
-      potentialScore: 72,
-      confidenceScore: 48,
+      potentialScore: null,
+      confidenceScore: null,
       evidenceStatus: 'example',
       recommendation: 'business-planning',
       summary: '야간 콘텐츠와 전통시장 동선의 연결을 우선 검토합니다.',
@@ -32,8 +33,8 @@ export const demoSnapshot: PublishedSnapshot = {
     },
     {
       id: 'hahoemaeul',
-      potentialScore: 68,
-      confidenceScore: 42,
+      potentialScore: null,
+      confidenceScore: null,
       evidenceStatus: 'example',
       recommendation: 'field-validation',
       summary: '주변 음식·숙박과의 체류 연결을 현장에서 확인합니다.',
@@ -47,8 +48,8 @@ export const demoSnapshot: PublishedSnapshot = {
     },
     {
       id: 'dosan-yekki',
-      potentialScore: 61,
-      confidenceScore: 35,
+      potentialScore: null,
+      confidenceScore: null,
       evidenceStatus: 'example',
       recommendation: 'field-validation',
       summary: '무차량 이동과 관광약자 접근성을 우선 조사합니다.',
@@ -98,6 +99,7 @@ export const demoSnapshot: PublishedSnapshot = {
   ],
   limitations: [
     '모든 점수와 판단은 시연용 예시 데이터이며 정책 판단에 사용할 수 없습니다.',
+    '관광권역 여건 점수는 성장확률이나 투자효과가 아닙니다. 지표·가중치와 평가모형은 검증 전입니다.',
     '시·군 단위 방문자 수는 관광권역별 실측값으로 배분하지 않습니다.',
     '관광약자 접근성, 운영시간, 이동 연결성은 현장 확인 전입니다.',
   ],
@@ -107,6 +109,20 @@ export const demoSnapshot: PublishedSnapshot = {
     lastAttemptAt: null,
     affectedData: [],
   },
+};
+
+export const demoSnapshot: PublishedSnapshot = {
+  ...baseDemoSnapshot,
+  regions: baseDemoSnapshot.regions.map((region) => {
+    const evaluation = createDemoEvaluation(region.id);
+    return {
+      ...region,
+      recommendation: evaluation.result.gateStatus === 'reviewable' ? region.recommendation : 'field-validation',
+      potentialScore: evaluation.result.totalScore,
+      missingDataCount: evaluation.result.missingIndicatorIds.length,
+      evaluation,
+    };
+  }),
 };
 
 export const demoTasks: ValidationTask[] = [

@@ -8,6 +8,8 @@ const pageContracts = [
   { path: '/regions/old-town-wolyeonggyo', text: '원도심·월영교권' },
   { path: '/actions', text: '우선 실행과제' },
   { path: '/field', text: '현장검증' },
+  { path: '/data', text: '한국관광공사 OpenAPI 실제 응답' },
+  { path: '/evaluation', text: '평가방법 실험실' },
   { path: '/report', text: '정책 검토안' },
 ];
 
@@ -81,6 +83,8 @@ async function main() {
   expect(report.includes('PDF 미리보기'), '/report: expected print action.');
   expect(report.includes('no-print'), '/report: expected print-layout control marker.');
   console.log('PASS /report print layout');
+  expect(report.includes('권역별 계산 결과와 근거 버전'), '/report: expected shared evaluation evidence.');
+  console.log('PASS /report calculation evidence');
 
   await expectUnauthorizedMutation();
   console.log('Smoke checks passed.');

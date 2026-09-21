@@ -1,9 +1,12 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ActionTaskCard, FieldValidationBoard, ReportPreview } from './WorkflowViews';
 import type { ValidationTask } from '../../lib/domain';
+import { createDemoEvaluation } from '../../lib/evaluation/catalog';
+
+afterEach(cleanup);
 
 const task: ValidationTask = {
   id: 'field-1',
@@ -21,6 +24,19 @@ const task: ValidationTask = {
 };
 
 describe('workflow views', () => {
+  it('includes the shared calculation and missing-data bounds in the printable report', () => {
+    const { container } = render(<ReportPreview report={{
+      analyzedAt: '2026-09-21', mode: 'demo', sources: [], limitations: [],
+      priorityRegion: '산출 대기', potentialScore: null, confidenceScore: null, reasons: [], tasks: [],
+      evaluations: [createDemoEvaluation('old-town-wolyeonggyo'), createDemoEvaluation('hahoemaeul')],
+    }} />);
+    const report = within(container);
+    expect(report.getByRole('table', { name: '권역별 계산 결과와 근거 버전' })).toBeTruthy();
+    expect(report.getByText('65.0점')).toBeTruthy();
+    expect(report.getByText('55.0 ~ 75.0점')).toBeTruthy();
+    expect(report.getByText('80.0%')).toBeTruthy();
+    expect(report.getByText('synthetic-hahoemaeul-v1')).toBeTruthy();
+  });
   it('links an action task to its related field validation item', () => {
     render(<ActionTaskCard task={task} />);
 
@@ -70,7 +86,7 @@ describe('workflow views', () => {
       />,
     );
 
-    expect(screen.getByText('분석 기준일: 2026-09-21')).toBeTruthy();
+    expect(screen.getByText('스냅샷 발행일: 2026-09-21')).toBeTruthy();
     expect(screen.getByText('한국관광공사 관광정보 API')).toBeTruthy();
     expect(screen.getByText('권역별 실측 방문 데이터가 없습니다.')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'PDF 미리보기' })).toBeTruthy();

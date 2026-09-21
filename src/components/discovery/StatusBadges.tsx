@@ -15,16 +15,16 @@ export function DataStatusBadge({ status }: { status: EvidenceStatus }) {
   return <span className={`data-status data-status-${status}`}>{evidenceStatusLabel[status]}</span>;
 }
 
-export function ScorePair({ potential, confidence }: { potential: number | null; confidence: number | null }) {
+export function ScorePair({ potential, example }: { potential: number | null; example: boolean }) {
   return (
     <dl className="score-pair">
       <div>
-        <dt>잠재력 점수</dt>
-        <dd>{scoreText(potential)}</dd>
+        <dt>관광권역 여건 점수</dt>
+        <dd>{scoreText(potential)}{example && potential !== null ? ' · 예시' : ''}</dd>
       </div>
       <div>
-        <dt>데이터 신뢰도</dt>
-        <dd>{scoreText(confidence)}</dd>
+        <dt>모형 검증</dt>
+        <dd>검증 전</dd>
       </div>
     </dl>
   );

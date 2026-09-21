@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { TourismPlace } from '../domain';
 import { demoSnapshot } from '../demo';
@@ -12,7 +12,7 @@ import {
 
 const visitors: VisitorRecord[] = [
   {
-    baseYmd: '20260921',
+    baseYmd: '20260822',
     signguCode: '47170',
     signguNm: '안동시',
     visitorType: '2',
@@ -23,6 +23,7 @@ const visitors: VisitorRecord[] = [
 const originalDataLagDays = process.env.TOUR_DATA_LAG_DAYS;
 
 afterEach(() => {
+  vi.useRealTimers();
   if (originalDataLagDays === undefined) {
     delete process.env.TOUR_DATA_LAG_DAYS;
   } else {
@@ -59,6 +60,43 @@ function dependencies(overrides: Partial<SyncDependencies> = {}): SyncDependenci
 }
 
 describe('runSyncBatch', () => {
+  it.each([
+    ['missing outside visitors', [{ ...visitors[0], visitorType: '1' }], places],
+    ['empty places', visitors, []],
+    ['wrong visitor day', [{ ...visitors[0], baseYmd: '20260921' }], places],
+    ['invalid visitor day', [{ ...visitors[0], baseYmd: '20260230' }], places],
+    ['duplicate visitors', [...visitors, ...visitors], places],
+    ['duplicate places', visitors, [...places, ...places]],
+  ])('preserves the last good snapshot for %s', async (_name, visitorRows, placeRows) => {
+    const publish = vi.fn();
+    const markLatestSnapshotStale = vi.fn();
+    const releaseLease = vi.fn();
+    const result = await runSyncBatchWithDependencies(
+      { serviceKey: 'test', now: new Date('2026-09-21T08:00:00Z') },
+      dependencies({ fetchVisitors: async () => visitorRows, fetchPlaces: async () => placeRows, publish, markLatestSnapshotStale, releaseLease }),
+    );
+    expect(result.status).toBe('failed');
+    expect(publish).not.toHaveBeenCalled();
+    expect(markLatestSnapshotStale).toHaveBeenCalledOnce();
+    expect(releaseLease).toHaveBeenCalledOnce();
+  });
+
+  it('limits the entire ingestion phase and cleans up a stalled source', async () => {
+    vi.useFakeTimers();
+    const markLatestSnapshotStale = vi.fn();
+    const releaseLease = vi.fn();
+    let result: Awaited<ReturnType<typeof runSyncBatchWithDependencies>> | undefined;
+    const running = runSyncBatchWithDependencies(
+      { serviceKey: 'test', now: new Date('2026-09-21T08:00:00Z') },
+      dependencies({ fetchVisitors: () => new Promise(() => undefined), markLatestSnapshotStale, releaseLease }),
+    ).then((value) => { result = value; });
+    await vi.advanceTimersByTimeAsync(45_000);
+    expect(result?.status).toBe('failed');
+    expect(markLatestSnapshotStale).toHaveBeenCalledOnce();
+    expect(releaseLease).toHaveBeenCalledOnce();
+    await running;
+  });
+
   it('returns busy without fetching when another non-expired lease owns the batch', async () => {
     let visitorsFetched = false;
     const result = await runSyncBatchWithDependencies(
@@ -89,6 +127,7 @@ describe('runSyncBatch', () => {
     expect(publications).toHaveLength(1);
     expect(publications.get('20260822')?.snapshot.mode).toBe('live');
     expect(publications.get('20260822')?.snapshot.visitorContext.visitorCount).toBe(0);
+    expect(publications.get('20260822')?.snapshot.regions.map((region) => region.missingDataCount)).toEqual([null, null, null]);
   });
 
   it('marks the last live snapshot stale and releases its lease when either source fails', async () => {
@@ -148,7 +187,7 @@ describe('runSyncBatch', () => {
       dependencies({
         fetchVisitors: async ({ startYmd, endYmd }) => {
           requestedDate = `${startYmd}:${endYmd}`;
-          return visitors;
+          return visitors.map((record) => ({ ...record, baseYmd: startYmd }));
         },
       }),
     );

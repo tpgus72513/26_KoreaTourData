@@ -73,7 +73,7 @@ function liveEmptySnapshot(message: string, status: 'empty' | 'error' = 'empty')
       summary: '산출 대기',
       reasons: [],
       bottleneck: '독립적인 권역 단위 입력이 필요합니다.',
-      missingDataCount: 0,
+      missingDataCount: null,
     })),
     places: [],
     limitations: [
@@ -89,13 +89,21 @@ function liveEmptySnapshot(message: string, status: 'empty' | 'error' = 'empty')
   };
 }
 
-function toLiveSnapshot(value: unknown): PublishedSnapshot | undefined {
+export function toLiveSnapshot(value: unknown): PublishedSnapshot | undefined {
   const payload = typeof value === 'string' ? tryParseJson(value) : value;
   if (!isPublishedLiveSnapshot(payload)) {
     return undefined;
   }
 
-  return payload as unknown as PublishedSnapshot;
+  return {
+    ...payload,
+    regions: payload.regions.map((region) => (
+      region.recommendation === 'pending' && region.evidenceStatus === 'unknown' &&
+      region.potentialScore === null && region.confidenceScore === null && region.missingDataCount === 0
+        ? { ...region, missingDataCount: null }
+        : region
+    )),
+  };
 }
 
 function isPublishedLiveSnapshot(value: unknown): value is PublishedSnapshot {
@@ -103,14 +111,88 @@ function isPublishedLiveSnapshot(value: unknown): value is PublishedSnapshot {
     return false;
   }
   return (
-    typeof value.publishedAt === 'string' &&
+    isTimestamp(value.publishedAt) &&
     typeof value.disclaimer === 'string' &&
-    isRecord(value.visitorContext) &&
-    Array.isArray(value.regions) &&
-    Array.isArray(value.places) &&
-    Array.isArray(value.limitations) &&
-    isRecord(value.status)
+    isVisitorContext(value.visitorContext) &&
+    Array.isArray(value.regions) && value.regions.length === REGIONS.length &&
+    value.regions.every(isRegionOverview) &&
+    new Set(value.regions.map((region) => region.id)).size === REGIONS.length &&
+    Array.isArray(value.places) && value.places.every(isTourismPlace) &&
+    new Set(value.places.map((place) => place.id)).size === value.places.length &&
+    isStringArray(value.limitations) &&
+    isSnapshotStatus(value.status)
   );
+}
+
+function isVisitorContext(value: unknown): boolean {
+  if (!isRecord(value) || !isRecord(value.period)) return false;
+  return value.scope === '안동시' && typeof value.source === 'string' &&
+    isIsoDate(value.period.start) && isIsoDate(value.period.end) && value.period.start <= value.period.end &&
+    nullableNumber(value.visitorCount, 0) && isEvidenceStatus(value.evidenceStatus) && typeof value.note === 'string';
+}
+
+function isRegionOverview(value: unknown): value is Record<string, unknown> {
+  if (!isRecord(value)) return false;
+  return isRegionId(value.id) && nullableNumber(value.potentialScore, 0, 100) &&
+    nullableNumber(value.confidenceScore, 0, 100) && isEvidenceStatus(value.evidenceStatus) &&
+    isOneOf(value.recommendation, ['business-planning', 'field-validation', 'long-term-observation', 'pending']) &&
+    typeof value.summary === 'string' && isStringArray(value.reasons) && typeof value.bottleneck === 'string' &&
+    (value.missingDataCount === null || (typeof value.missingDataCount === 'number' &&
+      Number.isSafeInteger(value.missingDataCount) && value.missingDataCount >= 0));
+}
+
+function isTourismPlace(value: unknown): value is Record<string, unknown> {
+  if (!isRecord(value)) return false;
+  return isNonEmptyString(value.id) && isNonEmptyString(value.name) &&
+    isOneOf(value.category, ['attraction', 'accommodation', 'food', 'event', 'accessibility']) &&
+    finiteNumber(value.latitude, -90, 90) && finiteNumber(value.longitude, -180, 180) &&
+    (value.regionId === null || isRegionId(value.regionId)) && isEvidenceStatus(value.evidenceStatus) &&
+    typeof value.source === 'string' && (value.address === null || typeof value.address === 'string');
+}
+
+function isSnapshotStatus(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return isOneOf(value.type, ['ready', 'stale', 'empty', 'error']) && typeof value.message === 'string' &&
+    (value.lastAttemptAt === null || isTimestamp(value.lastAttemptAt)) && isStringArray(value.affectedData);
+}
+
+function isEvidenceStatus(value: unknown): boolean {
+  return isOneOf(value, ['verified', 'inferred', 'field-required', 'unknown', 'example']);
+}
+
+function isRegionId(value: unknown): boolean {
+  return REGIONS.some((region) => region.id === value);
+}
+
+function isOneOf(value: unknown, values: readonly string[]): boolean {
+  return typeof value === 'string' && values.includes(value);
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function finiteNumber(value: unknown, min: number, max = Number.MAX_VALUE): boolean {
+  return typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max;
+}
+
+function nullableNumber(value: unknown, min: number, max = Number.MAX_VALUE): boolean {
+  return value === null || finiteNumber(value, min, max);
+}
+
+function isIsoDate(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+function isTimestamp(value: unknown): value is string {
+  return typeof value === 'string' && isIsoDate(value.slice(0, 10)) &&
+    /^\d{4}-\d{2}-\d{2}T/.test(value) && Number.isFinite(Date.parse(value));
 }
 
 function tryParseJson(value: string): unknown {
@@ -122,10 +204,10 @@ function tryParseJson(value: string): unknown {
 }
 
 function asIsoString(value: unknown): string | null {
-  if (value instanceof Date) {
+  if (value instanceof Date && Number.isFinite(value.getTime())) {
     return value.toISOString();
   }
-  return typeof value === 'string' ? value : null;
+  return isTimestamp(value) ? value : null;
 }
 
 function asStringArray(value: unknown): string[] {

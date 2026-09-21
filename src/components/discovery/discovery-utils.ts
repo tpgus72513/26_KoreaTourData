@@ -1,11 +1,11 @@
 import { REGIONS, type EvidenceStatus, type PublishedSnapshot, type RegionId } from '../../lib/domain';
 
 export const METRICS = [
-  ['관광수요', '30%'],
-  ['체류·소비 전환', '25%'],
-  ['권역 연결성', '20%'],
-  ['관광약자 접근성', '15%'],
-  ['지속가능성', '10%'],
+  ['관광자원 기반', '미확정'],
+  ['체류·지역소비 지원 여건', '미확정'],
+  ['권역 내 이동 연결', '미확정'],
+  ['관광약자 이용 여건', '미확정'],
+  ['주민·환경 여건', '미확정'],
 ] as const;
 
 export const evidenceStatusLabel: Record<EvidenceStatus, string> = {
@@ -31,7 +31,12 @@ export function scoreText(score: number | null) {
 export function formatPublishedAt(value: string) {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime()) || date.getTime() <= 0) return '미발행';
-  return new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(date);
+  return new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeZone: 'Asia/Seoul' }).format(date);
+}
+
+export function sourcePeriodText(period: PublishedSnapshot['visitorContext']['period']) {
+  if (!period.start || !period.end) return '미확인';
+  return period.start === period.end ? period.start : `${period.start} ~ ${period.end}`;
 }
 
 export function isDemo(snapshot: PublishedSnapshot) {

@@ -7,6 +7,7 @@ import {
   toFiniteNumber,
   toNonEmptyString,
   TourismApiError,
+  validateResponsePage,
 } from './request';
 
 const AREA_CODE_ENDPOINT = 'KorService2/areaCode2';
@@ -18,6 +19,7 @@ const SOURCE = 'KTO KorService2/areaBasedList2';
 export type FetchAndongPlacesOptions = {
   serviceKey: string;
   fetchImpl?: typeof fetch;
+  signal?: AbortSignal;
 };
 
 export function normalizePlaceItems(payload: unknown): TourismPlace[] {
@@ -61,15 +63,18 @@ export function normalizePlaceItems(payload: unknown): TourismPlace[] {
 export async function fetchAndongPlaces({
   serviceKey,
   fetchImpl = fetch,
+  signal,
 }: FetchAndongPlacesOptions): Promise<TourismPlace[]> {
   const provinceCode = await findSingleAreaCode({
     serviceKey,
     fetchImpl,
+    signal,
     expectedName: '경상북도',
   });
   const andongCode = await findSingleAreaCode({
     serviceKey,
     fetchImpl,
+    signal,
     areaCode: provinceCode,
     expectedName: '안동시',
   });
@@ -77,22 +82,43 @@ export async function fetchAndongPlaces({
   const firstPage = await fetchPlacesPage({
     serviceKey,
     fetchImpl,
+    signal,
     areaCode: provinceCode,
     sigunguCode: andongCode,
     pageNo: 1,
   });
-  const pages = pageCount(responseTotalCount(firstPage));
-  const places = normalizePlaceItems(firstPage);
+  const totalCount = responseTotalCount(firstPage);
+  const pages = pageCount(totalCount);
+  const places: TourismPlace[] = [];
+  const identities = new Set<string>();
+  const appendPage = (payload: unknown, pageNo: number) => {
+    const rawItems = validateResponsePage(payload, pageNo, ROWS_PER_PAGE, totalCount);
+    for (const item of rawItems) {
+      const record = typeof item === 'object' && item !== null && !Array.isArray(item)
+        ? item as Record<string, unknown> : undefined;
+      const id = toNonEmptyString(record?.contentid);
+      if (id === undefined || toNonEmptyString(record?.title) === undefined) {
+        throw new TourismApiError('Tourism API returned invalid content identity');
+      }
+      if (identities.has(id)) {
+        throw new TourismApiError('Tourism API returned duplicate content IDs');
+      }
+      identities.add(id);
+    }
+    places.push(...normalizePlaceItems(payload));
+  };
+  appendPage(firstPage, 1);
 
   for (let pageNo = 2; pageNo <= pages; pageNo += 1) {
     const page = await fetchPlacesPage({
       serviceKey,
       fetchImpl,
+      signal,
       areaCode: provinceCode,
       sigunguCode: andongCode,
       pageNo,
     });
-    places.push(...normalizePlaceItems(page));
+    appendPage(page, pageNo);
   }
 
   return places;
@@ -103,18 +129,26 @@ async function findSingleAreaCode({
   fetchImpl,
   expectedName,
   areaCode,
+  signal,
 }: {
   serviceKey: string;
   fetchImpl: typeof fetch;
   expectedName: string;
   areaCode?: string;
+  signal?: AbortSignal;
 }): Promise<string> {
   const payload = await requestTourismJson({
     endpoint: AREA_CODE_ENDPOINT,
     serviceKey,
     fetchImpl,
+    signal,
     params: { areaCode, numOfRows: ROWS_PER_PAGE, pageNo: 1 },
   });
+  const totalCount = responseTotalCount(payload);
+  if (totalCount > ROWS_PER_PAGE) {
+    throw new TourismApiError('Tourism API area-code pagination limit exceeded');
+  }
+  validateResponsePage(payload, 1, ROWS_PER_PAGE, totalCount);
   const matchingCodes = responseItems(payload).flatMap((item) => {
     if (typeof item !== 'object' || item === null || Array.isArray(item)) {
       return [];
@@ -141,17 +175,20 @@ async function fetchPlacesPage({
   areaCode,
   sigunguCode,
   pageNo,
+  signal,
 }: {
   serviceKey: string;
   fetchImpl: typeof fetch;
   areaCode: string;
   sigunguCode: string;
   pageNo: number;
+  signal?: AbortSignal;
 }): Promise<unknown> {
   return requestTourismJson({
     endpoint: AREA_BASED_LIST_ENDPOINT,
     serviceKey,
     fetchImpl,
+    signal,
     params: { areaCode, sigunguCode, numOfRows: ROWS_PER_PAGE, pageNo },
   });
 }
@@ -178,5 +215,7 @@ function categoryFromContentType(contentType: unknown): TourismPlaceCategory {
 }
 
 function isCoordinatePair(latitude: number, longitude: number): boolean {
-  return latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
+  // The provider uses (0, 0) when a course/resource has no usable location.
+  return !(latitude === 0 && longitude === 0) &&
+    latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
 }

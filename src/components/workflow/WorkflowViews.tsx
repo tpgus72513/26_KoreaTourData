@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
-import type { SnapshotMode, ValidationTask, ValidationTaskStatus } from '../../lib/domain';
+import type { SnapshotMode, SnapshotStatus, ValidationTask, ValidationTaskStatus } from '../../lib/domain';
 import { REGIONS } from '../../lib/domain';
+import type { EvaluationBundle } from '../../lib/evaluation/catalog';
+import { ReportEvaluationSummary } from './ReportEvaluationSummary';
 
 export type ReportModel = {
+  evaluations?: EvaluationBundle[];
   analyzedAt: string;
   mode: SnapshotMode;
   sources: string[];
@@ -15,6 +18,9 @@ export type ReportModel = {
   confidenceScore: number | null;
   reasons: string[];
   tasks: ValidationTask[];
+  visitorPeriod?: string;
+  snapshotStatus?: SnapshotStatus;
+  taskReadFailed?: boolean;
 };
 
 const STATUS_LABELS: Record<ValidationTaskStatus, string> = {
@@ -69,27 +75,50 @@ type FieldValidationBoardProps = {
   tasks: ValidationTask[];
   mode: SnapshotMode;
   onSave: (task: ValidationTask) => void | Promise<void>;
+  selectedTaskId?: string;
 };
 
-export function FieldValidationBoard({ tasks, mode, onSave }: FieldValidationBoardProps) {
-  const [items, setItems] = useState(tasks);
+export function FieldValidationBoard({ tasks, mode, onSave, selectedTaskId }: FieldValidationBoardProps) {
+  const [drafts, setDrafts] = useState(() => new Map<string, ValidationTask>());
+  const [saving, setSaving] = useState<string[]>([]);
+  const savingIds = useRef(new Set<string>());
   const [notice, setNotice] = useState<string | null>(null);
+  const items = tasks.map((task) => drafts.get(task.id) ?? task);
+  const selectedTaskExists = tasks.some((task) => task.id === selectedTaskId);
 
   useEffect(() => {
-    setItems(tasks);
-  }, [tasks]);
+    if (!selectedTaskId || !selectedTaskExists) return;
+    const card = document.getElementById(`field-task-${selectedTaskId}`);
+    card?.focus();
+    card?.scrollIntoView?.({ block: 'center' });
+  }, [selectedTaskId, selectedTaskExists]);
 
   const updateTask = (id: string, update: (task: ValidationTask) => ValidationTask) => {
-    setItems((current) => current.map((task) => (task.id === id ? update(task) : task)));
+    setDrafts((current) => {
+      const task = current.get(id) ?? tasks.find((item) => item.id === id);
+      return task ? new Map(current).set(id, update(task)) : current;
+    });
     setNotice(null);
   };
 
   const saveTask = async (task: ValidationTask) => {
+    if (savingIds.current.has(task.id)) return;
+    savingIds.current.add(task.id);
+    setSaving([...savingIds.current]);
     try {
       await onSave(task);
+      setDrafts((current) => {
+        if (current.get(task.id) !== task) return current;
+        const next = new Map(current);
+        next.delete(task.id);
+        return next;
+      });
       setNotice(mode === 'demo' ? '시연 변경사항을 이 브라우저 세션에 저장했습니다.' : '현장검증 과제를 저장했습니다.');
     } catch {
       setNotice('저장하지 못했습니다. 네트워크와 관리자 권한을 확인한 뒤 다시 시도하세요.');
+    } finally {
+      savingIds.current.delete(task.id);
+      setSaving([...savingIds.current]);
     }
   };
 
@@ -107,9 +136,11 @@ export function FieldValidationBoard({ tasks, mode, onSave }: FieldValidationBoa
         ) : null}
       </div>
       {notice ? <p className="workflow-notice" role="status">{notice}</p> : null}
+      {selectedTaskId && !selectedTaskExists ? <p role="status">선택한 과제를 찾을 수 없습니다. 아래 과제 목록을 확인하세요.</p> : null}
+      {items.length === 0 ? <p>등록된 현장검증 과제가 없습니다. 아래에서 첫 과제를 만드세요.</p> : null}
       <div className="field-task-grid">
         {items.map((task) => (
-          <article className="workflow-card field-task-card" key={task.id}>
+          <article className="workflow-card field-task-card" key={task.id} id={`field-task-${task.id}`} tabIndex={-1}>
             <div className="workflow-card-heading">
               <div>
                 <p className="workflow-eyebrow">{task.location}</p>
@@ -136,6 +167,7 @@ export function FieldValidationBoard({ tasks, mode, onSave }: FieldValidationBoa
             <p>{task.question}</p>
             <fieldset>
               <legend>현장검증 체크리스트</legend>
+              <p>체크는 조사 수행 여부를 기록합니다. 접근성 충족 여부는 검증 결과에 별도로 기록하세요.</p>
               {task.checklist.map((item) => (
                 <label className="workflow-check" key={item.id}>
                   <input
@@ -194,8 +226,8 @@ export function FieldValidationBoard({ tasks, mode, onSave }: FieldValidationBoa
                 }
               />
             </label>
-            <button className="workflow-button" type="button" onClick={() => void saveTask(task)}>
-              현장검증 내용 저장
+            <button className="workflow-button" type="button" disabled={saving.includes(task.id)} onClick={() => void saveTask(task)}>
+              {saving.includes(task.id) ? '저장 중…' : '현장검증 내용 저장'}
             </button>
           </article>
         ))}
@@ -210,23 +242,32 @@ export function ReportPreview({ report }: { report: ReportModel }) {
       <header>
         <p className="workflow-eyebrow">정책 검토안 미리보기</p>
         <h1 id="report-heading">안동 관광권역 정책 검토안</h1>
-        <p>분석 기준일: {report.analyzedAt}</p>
+        <p>스냅샷 발행일: {report.analyzedAt}</p>
+        <p>방문자 자료 기간: {report.visitorPeriod ?? '자료 없음'}</p>
         {report.mode === 'demo' ? <p className="workflow-notice">예시 데이터 · 정책 판단 금지</p> : null}
+        {report.snapshotStatus && report.snapshotStatus.type !== 'ready' ? (
+          <div className="workflow-notice" role="status">
+            <p>{report.snapshotStatus.message}</p>
+            {report.snapshotStatus.lastAttemptAt ? <p>최근 수집 시도: {report.snapshotStatus.lastAttemptAt}</p> : null}
+            {report.snapshotStatus.affectedData.length > 0 ? <p>영향받은 자료: {report.snapshotStatus.affectedData.join(', ')}</p> : null}
+          </div>
+        ) : null}
+        {report.taskReadFailed ? <p className="workflow-notice" role="alert">현장검증 자료를 불러오지 못해 과제 목록과 진행 건수를 확인할 수 없습니다.</p> : null}
       </header>
       <section>
         <h2>우선 검토 권역</h2>
         <p>{report.priorityRegion}</p>
       </section>
       <section>
-        <h2>점수와 신뢰도</h2>
+        <h2>관광권역 여건과 자료 검증</h2>
         <dl className="workflow-meta">
           <div>
-            <dt>잠재력 점수</dt>
+            <dt>관광권역 여건 점수</dt>
             <dd>{scoreLabel(report.potentialScore)}</dd>
           </div>
           <div>
-            <dt>데이터 신뢰도</dt>
-            <dd>{scoreLabel(report.confidenceScore)}</dd>
+            <dt>자료 검증</dt>
+            <dd>자료 검증 기준 수립 전</dd>
           </div>
         </dl>
       </section>
@@ -234,20 +275,21 @@ export function ReportPreview({ report }: { report: ReportModel }) {
         <h2>핵심 근거</h2>
         <ul>{report.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul>
       </section>
+      {report.mode === 'demo' && <ReportEvaluationSummary evaluations={report.evaluations ?? []} />}
       <section>
         <h2>우선 실행과제</h2>
-        <ul>{report.tasks.map((task) => <li key={task.id}>{task.relatedAction ?? task.title}</li>)}</ul>
+        {report.taskReadFailed ? <p>과제 목록 확인 불가</p> : <ul>{report.tasks.map((task) => <li key={task.id}>{task.relatedAction ?? task.title}</li>)}</ul>}
       </section>
       <section>
         <h2>현장검증 상태</h2>
-        {report.tasks.length === 0 ? <p>등록된 현장검증 과제가 없습니다.</p> : (
+        {report.taskReadFailed ? <p>진행 현황 확인 불가</p> : report.tasks.length === 0 ? <p>등록된 현장검증 과제가 없습니다.</p> : (
           <ul>{taskStatusSummary(report.tasks).map((item) => <li key={item.label}>{item.label} {item.count}건</li>)}</ul>
         )}
       </section>
       <section>
         <h2>KPI 초안</h2>
-        <p>KPI 초안: 현장검증 과제 완료 {report.tasks.filter((task) => task.status === 'completed').length}/{report.tasks.length}건</p>
-        <p>이 수치는 현장검증 진행 현황을 위한 초안이며 사업 효과를 의미하지 않습니다.</p>
+        {report.taskReadFailed ? <p>자료 조회 후 집계할 수 있습니다.</p> : <p>KPI 초안: 현장검증 과제 완료 {report.tasks.filter((task) => task.status === 'completed').length}/{report.tasks.length}건</p>}
+        <p>이 수치는 조사 수행 현황이며 접근성 충족이나 사업 효과를 의미하지 않습니다. 현장 결과를 별도로 검토해야 합니다.</p>
       </section>
       <section>
         <h2>포함된 데이터 출처</h2>

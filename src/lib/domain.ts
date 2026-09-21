@@ -1,3 +1,5 @@
+import type { EvaluationBundle } from './evaluation/catalog';
+
 export type RegionId =
   | 'old-town-wolyeonggyo'
   | 'hahoemaeul'
@@ -46,6 +48,7 @@ export interface RegionDefinition {
 }
 
 export interface RegionOverview {
+  evaluation?: EvaluationBundle;
   id: RegionId;
   potentialScore: number | null;
   confidenceScore: number | null;
@@ -54,7 +57,7 @@ export interface RegionOverview {
   summary: string;
   reasons: string[];
   bottleneck: string;
-  missingDataCount: number;
+  missingDataCount: number | null;
 }
 
 export interface TourismPlace {

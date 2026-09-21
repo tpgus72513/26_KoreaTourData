@@ -5,6 +5,7 @@ import {
   toFiniteNumber,
   toNonEmptyString,
   TourismApiError,
+  validateResponsePage,
 } from './request';
 
 const DATA_LAB_ENDPOINT = 'DataLabService/locgoRegnVisitrDDList';
@@ -26,6 +27,7 @@ export type FetchAndongVisitorsOptions = {
   startYmd: string;
   endYmd: string;
   fetchImpl?: typeof fetch;
+  signal?: AbortSignal;
 };
 
 export function normalizeVisitorItems(payload: unknown): VisitorRecord[] {
@@ -61,9 +63,11 @@ export async function fetchAndongVisitors({
   startYmd,
   endYmd,
   fetchImpl = fetch,
+  signal,
 }: FetchAndongVisitorsOptions): Promise<VisitorRecord[]> {
   const windows = splitDateWindows(startYmd, endYmd);
   const records: VisitorRecord[] = [];
+  const identities = new Set<string>();
 
   for (const window of windows) {
     const firstPage = await fetchVisitorPage({
@@ -72,9 +76,30 @@ export async function fetchAndongVisitors({
       endYmd: window.endYmd,
       pageNo: 1,
       fetchImpl,
+      signal,
     });
-    const totalPages = pageCount(responseTotalCount(firstPage));
-    records.push(...normalizeVisitorItems(firstPage));
+    const totalCount = responseTotalCount(firstPage);
+    const totalPages = pageCount(totalCount);
+    const appendPage = (payload: unknown, pageNo: number) => {
+      const rawItems = validateResponsePage(payload, pageNo, ROWS_PER_PAGE, totalCount);
+      const normalized = normalizeVisitorItems(payload);
+      if (normalized.length !== rawItems.length) {
+        throw new TourismApiError('Tourism API returned invalid visitor records');
+      }
+      for (const record of normalized) {
+        parseYmd(record.baseYmd);
+        if (record.baseYmd < window.startYmd || record.baseYmd > window.endYmd) {
+          throw new TourismApiError('Tourism API returned visitors outside the requested date window');
+        }
+        const identity = `${record.baseYmd}:${record.signguCode}:${record.visitorType}`;
+        if (identities.has(identity)) {
+          throw new TourismApiError('Tourism API returned duplicate visitor records');
+        }
+        identities.add(identity);
+        records.push(record);
+      }
+    };
+    appendPage(firstPage, 1);
 
     for (let pageNo = 2; pageNo <= totalPages; pageNo += 1) {
       const page = await fetchVisitorPage({
@@ -83,8 +108,9 @@ export async function fetchAndongVisitors({
         endYmd: window.endYmd,
         pageNo,
         fetchImpl,
+        signal,
       });
-      records.push(...normalizeVisitorItems(page));
+      appendPage(page, pageNo);
     }
   }
 
@@ -97,17 +123,20 @@ async function fetchVisitorPage({
   endYmd,
   pageNo,
   fetchImpl,
+  signal,
 }: {
   serviceKey: string;
   startYmd: string;
   endYmd: string;
   pageNo: number;
   fetchImpl: typeof fetch;
+  signal?: AbortSignal;
 }): Promise<unknown> {
   return requestTourismJson({
     endpoint: DATA_LAB_ENDPOINT,
     serviceKey,
     fetchImpl,
+    signal,
     params: { startYmd, endYmd, numOfRows: ROWS_PER_PAGE, pageNo },
   });
 }
