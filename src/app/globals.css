@@ -1,0 +1,69 @@
+:root {
+  --color-canvas: #f8f7f2;
+  --color-surface: #ffffff;
+  --color-text: #18251e;
+  --color-muted: #5d6961;
+  --color-border: #d9ded6;
+  --color-primary: #1f5a43;
+  --color-primary-strong: #164633;
+  --color-secondary: #1d4f70;
+  --color-accent: #8f5d36;
+  --color-warning: #a7601c;
+  --color-danger: #a13232;
+  --color-unknown: #6b7280;
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
+  --radius-card: 0.625rem;
+  --shadow-card: 0 1px 2px rgb(24 37 30 / 8%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: var(--color-canvas);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-text);
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  outline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
